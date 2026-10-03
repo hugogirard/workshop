@@ -1,0 +1,7 @@
+supplier_id, sku, product_name , unit_cost, currency, effective_date
+SUP-11,ESP-001, Espresso Blend 250g ,7.20,CAD,2026-02-01
+SUP-11,CLD-010, Cold Brew Kit ,19.90,CAD,2026-02-01
+SUP-22,DEC-004,Decaf Single Origin 250g,6.10,USD,2026-02-01
+SUP-22,ESP-001,Espresso Blend 250g,5.15,USD,2026-02-15
+SUP-33,MUG-100, Contoso Travel Mug ,4.80,EUR,2026-02-10
+SUP-33,FLT-050,Paper Filters 100pk,1.95,EUR,2026-02-10

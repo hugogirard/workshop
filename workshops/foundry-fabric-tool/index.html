@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connect Fabric to Foundry — the Fabric tool (ContosoMart)</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --fab-foundry: #8A5CF6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-foundry));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero .kicker {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            opacity: .85;
+            margin-bottom: 6px;
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 72ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.foundry {
+            background: var(--fab-foundry);
+        }
+
+        .recap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 0 0 22px;
+        }
+
+        @media (max-width:720px) {
+            .recap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .recap .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+        }
+
+        .recap .panel h3 {
+            margin: 0 0 6px;
+            font-size: 15px;
+        }
+
+        .recap .panel p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .recap .panel.tension {
+            border-left: 4px solid var(--fab-foundry);
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-foundry);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 16px;
+        }
+
+        .module .srclinks a {
+            margin-right: 12px;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        .step .body ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+
+        .step .body li {
+            margin: 4px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .tabs {
+            margin: 10px 0;
+        }
+
+        .tabs .tabbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tabs .tabbtn {
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface-soft);
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tabs .tabbtn.active {
+            background: var(--code-bg);
+            color: #fff;
+            border-color: var(--code-bg);
+        }
+
+        .tabs .tabpane {
+            display: none;
+        }
+
+        .tabs .tabpane.active {
+            display: block;
+        }
+
+        .tabs .tabpane pre.code {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        table.tbl {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        table.tbl th,
+        table.tbl td {
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.tbl th {
+            background: var(--surface-soft);
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        .bridge {
+            background: linear-gradient(140deg, var(--fab-foundry), var(--fab-navy));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .bridge h3 {
+            margin: 0 0 6px;
+        }
+
+        .bridge p {
+            margin: 0;
+            opacity: .93;
+        }
+
+        .bridge a {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">Connect Fabric to Foundry<span class="sub">ContosoMart · Part 2 · Act 10</span></div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <div class="kicker">Part 2 · Azure AI Foundry — Act 10</div>
+                <h1>Give the agent the numbers — the Fabric tool</h1>
+                <p>Your concierge (Act 9) can reason, but it can't see ContosoMart's data. Here you attach the
+                    published Fabric data agent (Act 8) to it as the <strong>Microsoft Fabric tool</strong>. Thanks to
+                    <strong>identity passthrough</strong>, the agent queries OneLake as the signed-in user — grounded,
+                    governed, and never made up.
+                </p>
+                <div class="chips">
+                    <span class="chip foundry">fabric_dataagent_preview</span>
+                    <span class="chip">Identity passthrough (OBO)</span>
+                    <span class="chip">Portal + SDK + REST</span>
+                </div>
+            </div>
+
+            <div class="recap">
+                <div class="panel">
+                    <h3>Where the story is</h3>
+                    <p>Act 8 published <code>ContosoMart Analyst</code>; Act 9 built <code>contosomart-concierge</code>.
+                        Two agents, not yet talking.</p>
+                </div>
+                <div class="panel tension">
+                    <h3>What still hurts</h3>
+                    <p>Ask the concierge "what did we sell last week?" and it guesses. An assistant that invents
+                        revenue can't be trusted.</p>
+                </div>
+            </div>
+
+            <!-- Module 0 -->
+            <section class="module" id="m0" data-title="The tool & OBO">
+                <h2><span class="badge">Module 0</span> How the Fabric tool grounds an agent</h2>
+                <p class="lead">The Fabric tool turns your enterprise data into a conversational answer inside the
+                    Foundry
+                    agent — and does it under the end user's own identity.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Fabric tool</a>
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity"
+                        target="_blank" rel="noopener">Agent identity</a>
+                </p>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">The end-to-end flow</span><span
+                            class="est">~5 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> understand what happens when a user asks a data question.</p>
+                        <ul>
+                            <li>You publish a Fabric data agent (done in Act 8) and connect it to Foundry.</li>
+                            <li>A user asks the concierge a question; the agent decides whether to use the Fabric tool.
+                            </li>
+                            <li>If so, it uses the <strong>end user's identity</strong> to generate queries over data
+                                <em>they</em> can access.
+                            </li>
+                            <li>The agent turns the returned results into its answer.</li>
+                        </ul>
+                        <div class="callout pro"><span class="k">Why OBO matters</span>Identity passthrough
+                            (On-Behalf-Of) means
+                            the same Purview policies, RLS and CLS from Act 8 keep applying — the agent can't leak data
+                            the user couldn't see.</div>
+                        <div class="callout note"><span class="k">Preview</span>The Fabric tool is in public preview —
+                            fine for
+                            enablement, not recommended for production workloads yet.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 1 -->
+            <section class="module" id="m1" data-title="Prereqs & permissions">
+                <h2><span class="badge">Module 1</span> Prerequisites &amp; permissions</h2>
+                <p class="lead">Both sides must line up: the data agent published in Fabric, the Foundry project, and
+                    the
+                    right access for every user who will ask questions.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Prerequisites</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-science/data-agent-sharing#underlying-data-source-permissions"
+                        target="_blank" rel="noopener">Source permissions</a>
+                </p>
+
+                <details class="step" data-step="m1-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Check both sides &amp; grant
+                            access</span><span class="est">~8 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> avoid the most common failure — an <code>unauthorized</code> tool
+                            call.</p>
+                        <ul>
+                            <li>The Act 8 data agent is <strong>published</strong> (paid F2+/P1+ capacity).</li>
+                            <li>Assign developers and end users at least the <strong>Foundry User</strong> RBAC role.
+                            </li>
+                            <li>Give each end user at least <strong>READ</strong> on the Fabric data agent, plus the
+                                minimum permission on each source (Read on lakehouse; SELECT on warehouse tables; Reader
+                                on the KQL DB; Read on the semantic model — RLS/CLS still apply).</li>
+                            <li>Data agent + Foundry project in the <strong>same tenant</strong>; data agent + sources
+                                in the <strong>same region</strong>.</li>
+                            <li>Use <strong>user identity</strong> auth — service principal isn't supported for the
+                                Fabric tool.</li>
+                        </ul>
+                        <div class="callout verify"><span class="k">Expected result</span>You can open the Fabric data
+                            agent
+                            and query it directly in Fabric as your test user.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 2 -->
+            <section class="module" id="m2" data-title="Create the connection">
+                <h2><span class="badge">Module 2</span> Create the Microsoft Fabric connection</h2>
+                <p class="lead">Foundry reaches the data agent through a project connection built from two GUIDs in the
+                    data agent's URL.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Set up the Fabric connection</a>
+                </p>
+
+                <details class="step" data-step="m2-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Copy the two GUIDs</span><span
+                            class="est">~4 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> get <code>workspace_id</code> and <code>artifact_id</code> from
+                            Fabric.</p>
+                        <p>Open your data agent in Fabric and read them from the URL path:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>.../groups/&lt;workspace_id&gt;/aiskills/&lt;artifact_id&gt;...
+# Both values are GUIDs. These are the same IDs you noted at the end of Act 8.</code></pre>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m2-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Create the connection in
+                            Foundry</span><span class="est">~6 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> register the data agent as a connected resource.</p>
+                        <ul>
+                            <li>In the Foundry portal open your <code>contosomart</code> project → <strong>Manage →
+                                    Project details → Connected resources</strong>.</li>
+                            <li>Create a connection of type <strong>Microsoft Fabric</strong>; enter the
+                                <code>workspace_id</code> and <code>artifact_id</code>; save.
+                            </li>
+                            <li>Copy the connection <strong>ID</strong> — it looks like:</li>
+                        </ul>
+                        <pre
+                            class="code"><button class="copy">Copy</button><code>/subscriptions/&lt;subscriptionId&gt;/resourceGroups/&lt;rg&gt;/providers/Microsoft.CognitiveServices/accounts/&lt;foundryAccount&gt;/projects/contosomart/connections/&lt;connectionName&gt;</code></pre>
+                        <div class="callout verify"><span class="k">Expected result</span>A <strong>Microsoft
+                                Fabric</strong>
+                            connection (e.g. <code>contosomart-fabric</code>) exists, and you have its connection ID.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 3 -->
+            <section class="module" id="m3" data-title="Attach the tool">
+                <h2><span class="badge">Module 3</span> Attach the Fabric tool to the agent</h2>
+                <p class="lead">Add the Fabric tool to <code>contosomart-concierge</code> in the portal, or define it in
+                    code.
+                    Forcing tool use guarantees the agent grounds its answer.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Create an agent with the Fabric tool</a>
+                </p>
+
+                <details class="step" data-step="m3-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Portal: add the tool</span><span
+                            class="est">~5 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> the no-code path.</p>
+                        <p>Open the agent, add the <strong>Microsoft Fabric</strong> tool, and pick your
+                            <code>contosomart-fabric</code> connection. Add tool guidance to the instructions so the
+                            model calls it:
+                        </p>
+                        <pre
+                            class="code"><button class="copy">Copy</button><code>For customer, product, sales, inventory or clickstream data, use the Fabric tool.</code></pre>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m3-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Code: create the agent with the
+                            tool</span><span class="est">~12 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> the code-first path, in your language of choice. Set the project
+                            endpoint and
+                            Fabric connection name/ID first; sign in with <code>az login</code>.</p>
+                        <div class="tabs" data-tabs>
+                            <div class="tabbar">
+                                <button class="tabbtn active" data-tab="py">Python</button>
+                                <button class="tabbtn" data-tab="cs">C#</button>
+                                <button class="tabbtn" data-tab="ts">TypeScript</button>
+                                <button class="tabbtn" data-tab="rest">REST</button>
+                            </div>
+                            <div class="tabpane active" data-pane="py">
+                                <pre class="code"><button class="copy">Copy</button><code>from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import (
+    PromptAgentDefinition, MicrosoftFabricPreviewTool,
+    FabricDataAgentToolParameters, ToolProjectConnection,
+)
+
+PROJECT_ENDPOINT = "https://&lt;resource&gt;.ai.azure.com/api/projects/contosomart"
+FABRIC_CONNECTION_NAME = "contosomart-fabric"
+
+project = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=DefaultAzureCredential())
+openai = project.get_openai_client()
+fabric = project.connections.get(FABRIC_CONNECTION_NAME)
+
+agent = project.agents.create_version(
+    agent_name="contosomart-concierge",
+    definition=PromptAgentDefinition(
+        model="gpt-4.1-mini",
+        instructions="You are the ContosoMart concierge. For sales, inventory or "
+                     "customer data, use the Fabric tool. Never invent numbers.",
+        tools=[MicrosoftFabricPreviewTool(
+            fabric_dataagent_preview=FabricDataAgentToolParameters(
+                project_connections=[ToolProjectConnection(project_connection_id=fabric.id)]
+            )
+        )],
+    ),
+)
+
+response = openai.responses.create(
+    tool_choice="required",
+    input="What were total sales last week?",
+    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+)
+print(response.output_text)</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="cs">
+                                <pre class="code"><button class="copy">Copy</button><code>var projectEndpoint = "https://&lt;resource&gt;.ai.azure.com/api/projects/contosomart";
+var fabricConnectionName = "contosomart-fabric";
+
+AIProjectClient projectClient = new(new Uri(projectEndpoint), new DefaultAzureCredential());
+AIProjectConnection fabric = projectClient.Connections.GetConnection(fabricConnectionName);
+
+FabricDataAgentToolOptions fabricTool = new()
+{
+    ProjectConnections = { new ToolProjectConnection(projectConnectionId: fabric.Id) }
+};
+DeclarativeAgentDefinition def = new(model: "gpt-4.1-mini")
+{
+    Instructions = "You are the ContosoMart concierge. Use the Fabric tool for data.",
+    Tools = { new MicrosoftFabricPreviewTool(fabricTool) }
+};
+AgentVersion agent = projectClient.AgentAdministrationClient
+    .CreateAgentVersion(agentName: "contosomart-concierge", options: new(def));
+
+var responseClient = projectClient.ProjectOpenAIClient
+    .GetProjectResponsesClientForAgent(agent.Name);
+CreateResponseOptions opts = new()
+{
+    ToolChoice = ResponseToolChoice.CreateRequiredChoice(),
+    InputItems = { ResponseItem.CreateUserMessageItem("What were total sales last week?") },
+};
+Console.WriteLine(responseClient.CreateResponse(opts).GetOutputText());</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="ts">
+                                <pre class="code"><button class="copy">Copy</button><code>import { DefaultAzureCredential } from "@azure/identity";
+import { AIProjectClient } from "@azure/ai-projects";
+
+const PROJECT_ENDPOINT = "https://&lt;resource&gt;.ai.azure.com/api/projects/contosomart";
+const FABRIC_CONNECTION_NAME = "contosomart-fabric";
+
+const project = new AIProjectClient(PROJECT_ENDPOINT, new DefaultAzureCredential());
+const openai = project.getOpenAIClient();
+const fabric = await project.connections.get(FABRIC_CONNECTION_NAME);
+
+const agent = await project.agents.createVersion("contosomart-concierge", {
+  kind: "prompt",
+  model: "gpt-4.1-mini",
+  instructions: "You are the ContosoMart concierge. Use the Fabric tool for data.",
+  tools: [{
+    type: "fabric_dataagent_preview",
+    fabric_dataagent_preview: {
+      project_connections: [{ project_connection_id: fabric.id }],
+    },
+  }],
+});
+
+const response = await openai.responses.create(
+  { input: "What were total sales last week?" },
+  { body: { agent_reference: { name: agent.name, type: "agent_reference" }, tool_choice: "required" } },
+);
+console.log(response.output_text);</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="rest">
+                                <pre class="code"><button class="copy">Copy</button><code># AGENT_TOKEN is a credential — keep it secret, never commit it.
+export AGENT_TOKEN=$(az account get-access-token --scope "https://ai.azure.com/.default" --query accessToken -o tsv)
+
+curl --request POST \
+  --url "$FOUNDRY_PROJECT_ENDPOINT/openai/v1/responses" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "model": "'$FOUNDRY_MODEL_DEPLOYMENT_NAME'",
+    "input": "What were total sales last week?",
+    "tool_choice": "required",
+    "tools": [{
+      "type": "fabric_dataagent_preview",
+      "fabric_dataagent_preview": {
+        "project_connections": [{ "project_connection_id": "'$FABRIC_PROJECT_CONNECTION_ID'" }]
+      }
+    }]
+  }'</code></pre>
+                            </div>
+                        </div>
+                        <div class="callout note"><span class="k">Note</span>The model you set here only orchestrates
+                            and writes
+                            the answer — it doesn't change the model the Fabric data agent uses for NL2SQL.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 4 -->
+            <section class="module" id="m4" data-title="Ask & verify">
+                <h2><span class="badge">Module 4</span> Ask ContosoMart — grounded this time</h2>
+                <p class="lead">Re-run the questions from Act 8, now through the Foundry concierge, and confirm the
+                    answers
+                    come from OneLake.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Expected output</a>
+                </p>
+
+                <details class="step" data-step="m4-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Run grounded prompts</span><span
+                            class="est">~8 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> prove the difference from Act 9.</p>
+                        <p>In the playground or via code, ask "What were total sales last week?" and "Which SKUs are
+                            below
+                            their reorder point?" The response is grounded in the connected Fabric workspace:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Response output: Based on the sales records in the connected Fabric workspace,
+last week's net sales were ... (numbers from gold/warehouse)</code></pre>
+                        <div class="callout verify"><span class="k">Expected result</span>The concierge now returns the
+                            <em>same</em>
+                            trusted numbers Priya reports on — no invention.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 5 -->
+            <section class="module" id="m5" data-title="Troubleshoot & alt">
+                <h2><span class="badge">Module 5</span> Troubleshoot &amp; alternatives</h2>
+                <p class="lead">A quick reference for the errors you'll most likely hit, plus when to reach for the
+                    Fabric IQ
+                    tool instead.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric" target="_blank"
+                        rel="noopener">Troubleshooting</a>
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric-iq"
+                        target="_blank" rel="noopener">Fabric IQ tool</a>
+                </p>
+
+                <details class="step" data-step="m5-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Common errors</span><span class="est">~6
+                            min</span></summary>
+                    <div class="body">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Symptom</th>
+                                    <th>Likely cause</th>
+                                    <th>Fix</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>unauthorized</code></td>
+                                    <td>User lacks access to the data agent or its sources</td>
+                                    <td>Grant READ in Fabric; use user identity auth</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Artifact Id ... valid GUID</code></td>
+                                    <td>Bad workspace/artifact ID</td>
+                                    <td>Recopy both GUIDs from the data-agent URL and recreate the connection</td>
+                                </tr>
+                                <tr>
+                                    <td>Agent won't use the tool</td>
+                                    <td>Tool not configured or prompt doesn't trigger it</td>
+                                    <td>Confirm the tool is attached; add tool guidance or set
+                                        <code>tool_choice="required"</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>configuration not found</code></td>
+                                    <td>Data agent not published</td>
+                                    <td>Publish it in Fabric and confirm its sources are valid</td>
+                                </tr>
+                                <tr>
+                                    <td>Empty results</td>
+                                    <td>Query doesn't match available data</td>
+                                    <td>Test the question directly in the Fabric data agent first</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m5-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">When to use Fabric IQ instead</span><span
+                            class="est">~4 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> know the sibling tool.</p>
+                        <p>The <strong>Fabric IQ</strong> tool (part of the Microsoft IQ family) lets an agent reason
+                            over Fabric
+                            data — data agents, ontologies and Power BI semantic models. Use the Fabric <em>data
+                                agent</em> tool when
+                            you've already curated a conversational data agent (this lab); consider Fabric IQ when you
+                            want the agent to
+                            reason directly over semantic models or an ontology.</p>
+                        <div class="callout note"><span class="k">Preview</span>Both are in preview; check each doc's
+                            support and
+                            networking notes before production.</div>
+                    </div>
+                </details>
+            </section>
+
+            <div class="bridge">
+                <h3>Next: add knowledge the tables don't have</h3>
+                <p>Your agent now answers with real numbers. But "what's our returns policy?" isn't in any table. In
+                    <strong>Act 11</strong> you'll add a <strong>Foundry IQ</strong> knowledge base over ContosoMart
+                    documents. →
+                    <a href="../foundry-iq-knowledge/index.html">Continue to Act 11</a>
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <footer class="foot">
+        Connect Fabric to Foundry (ContosoMart · Act 10) &middot; Grounded in Microsoft Learn (see
+        <code>spec.md</code>).
+        Part 2 of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:foundry-fabric-tool";
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+        document.querySelectorAll("[data-tabs]").forEach(group => {
+            group.querySelectorAll(".tabbtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    group.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+                    group.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    group.querySelector(`[data-pane="${btn.dataset.tab}"]`).classList.add("active");
+                });
+            });
+        });
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

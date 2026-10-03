@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContosoMart Governance &amp; Data Mesh Lab — Microsoft Fabric</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            counter-reset: mod;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-cyan));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 70ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.domains {
+            background: var(--fab-blue);
+        }
+
+        .chip.discover {
+            background: var(--fab-cyan);
+        }
+
+        .chip.protect {
+            background: var(--fab-gold);
+            color: #2b2400;
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-teal);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module>h2 .badge.illus {
+            background: var(--fab-bronze);
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 16px;
+        }
+
+        .module .srclinks a {
+            margin-right: 12px;
+        }
+
+        .learnmore {
+            background: var(--surface-soft);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin: 0 0 16px;
+        }
+
+        .learnmore .k {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            font-size: 11px;
+            color: var(--fab-cyan);
+            margin-right: 6px;
+        }
+
+        .learnmore a {
+            margin-right: 14px;
+            white-space: nowrap;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .tabs {
+            margin: 10px 0;
+        }
+
+        .tabs .tabbar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tabs .tabbtn {
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface-soft);
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tabs .tabbtn.active {
+            background: var(--code-bg);
+            color: #fff;
+            border-color: var(--code-bg);
+        }
+
+        .tabs .tabpane {
+            display: none;
+        }
+
+        .tabs .tabpane.active {
+            display: block;
+        }
+
+        .tabs .tabpane pre.code {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        /* ---- Estate strip + story bridge ---- */
+        .estate-band {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+            margin: 0 0 24px;
+        }
+
+        .estate {
+            width: 100%;
+            max-width: 660px;
+            height: auto;
+            display: block;
+            margin: 0 auto 4px;
+        }
+
+        .estate text {
+            font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+        }
+
+        .estate .track {
+            stroke: var(--border);
+            stroke-width: 2;
+        }
+
+        .estate .lake {
+            fill: rgba(39, 193, 166, .10);
+            stroke: var(--fab-accent);
+            stroke-dasharray: 4 3;
+        }
+
+        .estate .lake-t {
+            fill: var(--muted);
+            letter-spacing: .3px;
+        }
+
+        .estate .node {
+            fill: var(--surface);
+            stroke: var(--border);
+        }
+
+        .estate .node.on {
+            fill: var(--fab-accent);
+            stroke: var(--fab-accent);
+        }
+
+        .estate .nt {
+            fill: var(--muted);
+            font-weight: 700;
+        }
+
+        .estate .nl {
+            fill: var(--muted);
+        }
+
+        .estate .nl.on {
+            fill: var(--ink);
+            font-weight: 700;
+        }
+
+        .story-so-far {
+            margin: 8px 2px 0;
+            font-size: 13.5px;
+            color: var(--muted);
+            max-width: 96ch;
+        }
+
+        .story-so-far .wk {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-cyan);
+            margin-right: 8px;
+        }
+
+        .story-so-far strong {
+            color: var(--ink);
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">ContosoMart Governance &amp; Data Mesh<span class="sub">Microsoft Fabric hands-on lab</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <h1>ContosoMart Governance &amp; Data Mesh</h1>
+                <p>The <strong>capstone</strong>. Across the tour you built medallion gold, a real-time
+                    Eventhouse, a finance warehouse, an ML forecast, and mirrored inventory. Now make it all
+                    <strong>discoverable and governed</strong>: organize it into business <strong>domains</strong>,
+                    publish <strong>data products</strong>, endorse them, protect them with labels, and trace
+                    their <strong>lineage</strong>.
+                </p>
+                <div class="chips">
+                    <span class="chip">Hands-on + illustrated</span>
+                    <span class="chip domains">Domains</span>
+                    <span class="chip discover">Discover</span>
+                    <span class="chip protect">Protect</span>
+                </div>
+            </div>
+
+            <!-- ================= MODULE 0 ================= -->
+            <div class="estate-band">
+                <svg class="estate" viewBox="0 0 660 96" role="img"
+                    aria-label="ContosoMart Fabric estate map — seven workloads over one OneLake; the highlighted node is this lab.">
+                    <line class="track" x1="44" y1="26" x2="616" y2="26"></line>
+                    <circle class="node" cx="44" cy="26" r="15"></circle><text class="nt" x="44" y="30"
+                        text-anchor="middle" font-size="12">1</text><text class="nl" x="44" y="50" text-anchor="middle"
+                        font-size="9.5">Lakehouse</text>
+                    <circle class="node" cx="139" cy="26" r="15"></circle><text class="nt" x="139" y="30"
+                        text-anchor="middle" font-size="12">2</text><text class="nl" x="139" y="50" text-anchor="middle"
+                        font-size="9.5">Real-Time</text>
+                    <circle class="node" cx="235" cy="26" r="15"></circle><text class="nt" x="235" y="30"
+                        text-anchor="middle" font-size="12">3</text><text class="nl" x="235" y="50" text-anchor="middle"
+                        font-size="9.5">Ingest</text>
+                    <circle class="node" cx="330" cy="26" r="15"></circle><text class="nt" x="330" y="30"
+                        text-anchor="middle" font-size="12">4</text><text class="nl" x="330" y="50" text-anchor="middle"
+                        font-size="9.5">Warehouse</text>
+                    <circle class="node" cx="425" cy="26" r="15"></circle><text class="nt" x="425" y="30"
+                        text-anchor="middle" font-size="12">5</text><text class="nl" x="425" y="50" text-anchor="middle"
+                        font-size="9.5">Zero-copy</text>
+                    <circle class="node" cx="521" cy="26" r="15"></circle><text class="nt" x="521" y="30"
+                        text-anchor="middle" font-size="12">6</text><text class="nl" x="521" y="50" text-anchor="middle"
+                        font-size="9.5">ML</text>
+                    <circle class="node on" cx="616" cy="26" r="15"></circle><text class="nt" x="616" y="30"
+                        text-anchor="middle" font-size="12" fill="#03261f">7</text><text class="nl on" x="616" y="50"
+                        text-anchor="middle" font-size="9.5">Govern</text>
+                    <rect class="lake" x="8" y="60" width="644" height="24" rx="8"></rect>
+                    <text class="lake-t" x="330" y="76" text-anchor="middle" font-size="10">OneLake — one open copy,
+                        every engine</text>
+                </svg>
+                <p class="story-so-far"><span class="wk">Act 7 · Govern the sprawl</span>
+                    <strong>Story so far:</strong> six workloads now span the estate and nobody's sure who owns what.
+                    <strong>Your mission:</strong> organize it into domains and data products, endorse and label them,
+                    and trace lineage end to end.
+                </p>
+            </div>
+
+            <section class="module" id="m0" data-title="Setup">
+                <h2><span class="badge">Module 0</span> Why govern — the data mesh idea</h2>
+                <p class="lead">As data grows, central IT can't own every dataset. A <strong>data mesh</strong>
+                    decentralizes ownership by business domain, with federated governance — each team owns its
+                    data <em>as a product</em>, under shared rules. Fabric implements this natively.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Domains</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/microsoft-fabric-overview"
+                        target="_blank" rel="noopener">Fabric overview</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Domains &amp; data mesh</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview"
+                        target="_blank" rel="noopener">OneLake Catalog</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/governance-compliance-overview"
+                        target="_blank" rel="noopener">Governance overview</a>
+                </div>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Centralized vs federated governance</span>
+                        <span class="est">~6 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Traditional data platforms govern centrally,
+                            which becomes a bottleneck. A data mesh delegates domain-level control (rules,
+                            certification, default labels) to the business units, while the tenant keeps
+                            guardrails — the best of both.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>Think enterprise data
+                            catalog + RBAC delegation + data contracts: domains are the org chart for your
+                            data, and "data as a product" means each dataset has an owner, docs, quality, and
+                            an SLA.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>You can explain
+                            why ContosoMart's estate should be split into domains rather than governed as one
+                            pile.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 1 ================= -->
+            <section class="module" id="m1" data-title="Design domains">
+                <h2><span class="badge">Module 1</span> Design the domains</h2>
+                <p class="lead">Good governance starts on paper. Using the
+                    <code>data/domain-catalog.csv</code> blueprint, map every ContosoMart data product to a
+                    business domain and subdomain before touching the admin portal.
+                </p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Domains</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains-best-practices" target="_blank"
+                        rel="noopener">Domain best practices</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Domains concept</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains-best-practices" target="_blank"
+                        rel="noopener">Best practices</a>
+                </div>
+
+                <details class="step" data-step="m1-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Map products to domains</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Open the blueprint and confirm the plan: Sales
+                            owns the storefront gold; Marketing owns clickstream; Finance owns the warehouse
+                            view; Operations owns the forecast + mirrored inventory.</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Sales      / Storefront -> gold.daily_sales, gold.customer_ltv   (Certified)
+Marketing  / Web        -> Clickstream (Eventhouse)              (Promoted)
+Finance    / Reporting  -> wh_contoso_finance.vw_sales           (Certified)
+Operations / Supply     -> gold.demand_forecast, inventory       (Promoted)</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>Subdomains fine-tune the
+                            grouping (like schemas within a database). A workspace joins a domain, and every
+                            item in it inherits the domain attribute — so plan workspace boundaries around
+                            ownership.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>Every ContosoMart
+                            data product from the tour has a home domain + subdomain + target endorsement.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 2 ================= -->
+            <section class="module" id="m2" data-title="Create domains">
+                <h2><span class="badge illus">Module 2 · Illustrated</span> Create domains &amp; assign workspaces</h2>
+                <p class="lead">In the admin portal, a Fabric admin creates domains and delegates them to
+                    domain admins/contributors, then assigns workspaces. Assigning a workspace tags all its
+                    items with the domain — the mechanical heart of the mesh.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Create &amp; manage domains</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/domains" target="_blank"
+                        rel="noopener">Domains admin</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces" target="_blank"
+                        rel="noopener">Workspace roles</a>
+                </div>
+
+                <details class="step" data-step="m2-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Create a domain &amp; assign the workspace</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Create the domains from your plan and assign
+                            <code>ContosoMart-Analytics</code> so its items get a domain attribute (in a real
+                            org you'd split into a workspace per domain).
+                        </p>
+                        <pre class="code"><button class="copy">Copy</button><code>Admin portal -> Domains -> Create new domain: "Sales"
+  - Add domain admins (business owner)
+  - Assign workspaces: by name / by admin / by capacity
+Repeat for Marketing, Finance, Operations
+Optionally: create subdomains (Storefront, Web, Reporting, Supply)</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>Roles mirror RBAC:
+                            <strong>Fabric admin</strong> creates domains, <strong>domain admin</strong> owns
+                            one domain's settings, <strong>domain contributor</strong> (a workspace admin)
+                            assigns their workspace. Some tenant settings can be <em>delegated</em> to domain
+                            level — federated governance in action.
+                        </div>
+                        <div class="callout note"><span class="k">Note (why illustrated)</span>Creating
+                            domains needs <strong>Fabric admin</strong> rights a trial user often lacks — read
+                            along, or do it if you're a tenant admin.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>The workspace shows
+                            a domain badge; items are filterable by domain in the catalog.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 3 ================= -->
+            <section class="module" id="m3" data-title="Discover products">
+                <h2><span class="badge">Module 3</span> Discover data products in the OneLake Catalog</h2>
+                <p class="lead">The <strong>OneLake Catalog</strong> is where people find and understand data
+                    — filter by domain, type or endorsement, and read descriptions, owners, schema and
+                    lineage. Treating each gold table as a documented <em>product</em> is what makes the mesh
+                    usable.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview"
+                        target="_blank" rel="noopener">OneLake Catalog</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview"
+                        target="_blank" rel="noopener">Catalog overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-explore"
+                        target="_blank" rel="noopener">Explore the catalog</a>
+                </div>
+
+                <details class="step" data-step="m3-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Document &amp; find the gold products</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Add descriptions and owners to
+                            <code>gold.daily_sales</code> and <code>gold.customer_ltv</code>, then open the
+                            OneLake Catalog and filter by domain/type to find them the way a colleague would.
+                        </p>
+                        <div class="callout pro"><span class="k">For data pros</span>Metadata is the product's
+                            packaging: a clear description, an owner to ask, the schema, and lineage. Without
+                            it a "gold table" is just a file nobody trusts.</div>
+                        <div class="callout note"><span class="k">Note</span>Adding descriptions/owners is
+                            hands-on for items you own; the domain filter lights up once Module 2's domains
+                            exist.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>Filtering the
+                            catalog by the <em>Sales</em> domain surfaces the storefront gold products with
+                            descriptions.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 4 ================= -->
+            <section class="module" id="m4" data-title="Endorse">
+                <h2><span class="badge">Module 4</span> Endorse: promote &amp; certify</h2>
+                <p class="lead"><strong>Endorsement</strong> is a trust signal: <em>Promoted</em> means "the
+                    team vouches for this," <em>Certified</em> means "an authorized reviewer approved it to a
+                    standard." It's how consumers tell gold from a random draft.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/endorsement-overview" target="_blank"
+                        rel="noopener">Endorsement</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/endorsement-overview" target="_blank"
+                        rel="noopener">Endorsement overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/endorsement-promote-certify-content"
+                        target="_blank" rel="noopener">Promote / certify</a>
+                </div>
+
+                <details class="step" data-step="m4-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Promote and certify products</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Promote the products you own (self-service), and —
+                            if you're a certifier — certify the finance and sales gold per the blueprint.</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Item settings -> Endorsement
+  Promoted : gold.demand_forecast, Clickstream        (team vouches)
+  Certified: gold.daily_sales, gold.customer_ltv,
+             wh_contoso_finance.vw_sales               (authorized reviewer)</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>Certification ≈ a signed,
+                            approved release: only designated certifiers (set at tenant or domain level) can
+                            grant it, so the badge actually means something.</div>
+                        <div class="callout note"><span class="k">Note</span>Anyone with write access can
+                            <em>Promote</em>; <em>Certify</em> is restricted to configured certifiers — a
+                            domain-delegated setting.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>The gold products
+                            show Promoted/Certified badges and rank higher in catalog search.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 5 ================= -->
+            <section class="module" id="m5" data-title="Protect (labels)">
+                <h2><span class="badge illus">Module 5 · Illustrated</span> Protect with sensitivity labels &amp; DLP
+                </h2>
+                <p class="lead"><strong>Sensitivity labels</strong> (from Microsoft Purview) classify data and
+                    enforce protection that travels with it — even on export. DLP policies watch for risky
+                    sharing. This is how the finance numbers stay confidential end-to-end.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/information-protection" target="_blank"
+                        rel="noopener">Information protection</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/information-protection" target="_blank"
+                        rel="noopener">Sensitivity labels</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/apply-sensitivity-labels"
+                        target="_blank" rel="noopener">Apply labels</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/data-loss-prevention-overview"
+                        target="_blank" rel="noopener">DLP</a>
+                </div>
+
+                <details class="step" data-step="m5-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Label finance as Confidential</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Apply a <em>Confidential</em> label to the finance
+                            warehouse view and semantic model; the label (and its encryption/usage rules)
+                            follows the data into exports and downstream reports.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>Unlike table RLS (which
+                            controls rows in place), a sensitivity label is <em>classification + protection
+                                that travels</em> — it stays attached when the data leaves Fabric (e.g. an Excel
+                            export), enforced by Purview.</div>
+                        <div class="callout note"><span class="k">Note (why illustrated)</span>Labels are
+                            published from Microsoft Purview and enabled by an admin, and can be set as a
+                            <em>domain default</em>. Read along unless your tenant already has labels
+                            configured.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>The finance items
+                            show a Confidential label; exports carry it.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 6 ================= -->
+            <section class="module" id="m6" data-title="Lineage & wrap-up">
+                <h2><span class="badge">Module 6</span> Lineage, sharing &amp; tour recap</h2>
+                <p class="lead">Finally, prove it all connects. <strong>Lineage</strong> visualizes how data
+                    flows across the ContosoMart estate — from ingestion to gold to report — so you can audit
+                    impact and trust. Then recap the whole Fabric tour.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/lineage" target="_blank"
+                        rel="noopener">Lineage</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview"
+                        target="_blank" rel="noopener">External data sharing</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/lineage" target="_blank"
+                        rel="noopener">Lineage view</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview"
+                        target="_blank" rel="noopener">Cross-tenant sharing</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces" target="_blank"
+                        rel="noopener">Workspace roles</a>
+                </div>
+
+                <details class="step" data-step="m6-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Trace lineage &amp; recap the tour</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Open the workspace <strong>Lineage view</strong>
+                            and follow a path — pipeline → bronze → silver notebook → gold → semantic model →
+                            report. This is your impact-analysis and trust map.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>Lineage is your
+                            dependency graph for change management: before you alter a gold table, see every
+                            report and model downstream. Cross-tenant external sharing keeps governance at the
+                            source when data leaves the org.</div>
+                        <div class="callout verify"><span class="k">You did it 🎉</span>You organized the whole
+                            ContosoMart estate into a governed data mesh — domains, documented and endorsed
+                            data products, sensitivity labels, and end-to-end lineage.</div>
+                        <div class="callout note"><span class="k">Tour complete</span>Across seven labs you
+                            built ContosoMart's Fabric estate: <a href="../ecommerce-medallion/index.html">medallion
+                                lakehouse</a>, <a href="../realtime-intelligence/index.html">real-time
+                                intelligence</a>, <a href="../data-factory-ingestion/index.html">automated
+                                ingestion</a>, <a href="../warehouse-tsql/index.html">T-SQL warehouse</a>,
+                            <a href="../mirroring-shortcuts/index.html">zero-copy integration</a>,
+                            <a href="../data-science-ml/index.html">ML forecasting</a>, and this governance
+                            capstone. That's the breadth of Microsoft Fabric — one SaaS platform, one OneLake.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="foot">
+        ContosoMart Governance &amp; Data Mesh &middot; Grounded in Microsoft Learn (see <code>spec.md</code>).
+        Part of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:governance-datamesh";
+
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+
+        document.querySelectorAll("[data-tabs]").forEach(group => {
+            group.querySelectorAll(".tabbtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    group.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+                    group.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    group.querySelector(`[data-pane="${btn.dataset.tab}"]`).classList.add("active");
+                });
+            });
+        });
+
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+sensor_id,ts,warehouse,zone,temp_c,humidity_pct,door_open
+SENS-01,2026-03-01T14:00:00Z,YYZ-1,cold-store,3.9,61,0
+SENS-01,2026-03-01T14:05:00Z,YYZ-1,cold-store,4.2,62,0
+SENS-01,2026-03-01T14:10:00Z,YYZ-1,cold-store,6.8,64,1
+SENS-01,2026-03-01T14:15:00Z,YYZ-1,cold-store,8.5,67,1
+SENS-02,2026-03-01T14:00:00Z,YYZ-1,dry-store,19.1,44,0
+SENS-02,2026-03-01T14:05:00Z,YYZ-1,dry-store,19.3,45,0
+SENS-02,2026-03-01T14:10:00Z,YYZ-1,dry-store,19.2,45,0
+SENS-03,2026-03-01T14:00:00Z,SEA-2,cold-store,4.0,60,0
+SENS-03,2026-03-01T14:05:00Z,SEA-2,cold-store,4.1,60,0
+SENS-03,2026-03-01T14:10:00Z,SEA-2,cold-store,4.3,61,0

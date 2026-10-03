@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: contosomart
+
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: |
+        ./deployment/scripts/get-principal.ps1
+        ./deployment/scripts/ensure-fabric.ps1
+    posix:
+      shell: sh
+      run: |
+        ./deployment/scripts/get-principal.sh
+        ./deployment/scripts/ensure-fabric.sh
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./deployment/scripts/deploy-container.ps1
+    posix:
+      shell: sh
+      run: ./deployment/scripts/deploy-container.sh

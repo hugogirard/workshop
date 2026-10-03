@@ -1,0 +1,6 @@
+product_key,product_name,category,supplier_id,unit_cost_usd
+ESP-001,Espresso Blend 250g,Coffee,SUP-22,5.15
+CLD-010,Cold Brew Kit,Equipment,SUP-11,14.90
+DEC-004,Decaf Single Origin 250g,Coffee,SUP-22,6.10
+MUG-100,Contoso Travel Mug,Merch,SUP-33,4.80
+FLT-050,Paper Filters 100pk,Supplies,SUP-33,1.95

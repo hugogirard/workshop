@@ -1,0 +1,63 @@
+// Advanced Hunting queries — Act 13, Module 5 (ContosoMart "Secure the agents")
+// Run in Microsoft Defender: Investigation & response > Hunting > Advanced hunting.
+// All queries are read-only. Requires the Microsoft 365 connector (Module 1) for the
+// alert / CloudAppEvents correlations. Grounded in the AgentsInfo table reference:
+// https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-agentsinfo-table
+
+// 1) Full agent inventory — latest snapshot per agent, excluding deleted.
+//    arg_max(Timestamp, *) returns the most recent record for each AgentId.
+AgentsInfo
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
+| project AgentName, Platform, PublishedStatus, LifecycleStatus, Owners, Model, CreatedDateTime
+| sort by CreatedDateTime desc
+
+// 2) Find the ContosoMart agents (Acts 9-12) by name.
+AgentsInfo
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
+| where AgentName has "ContosoMart" or AgentName has "concierge"
+| project AgentName, Platform, PublishedStatus, EntraAgentId, Model, Channels
+
+// 3) Risky configuration surface — published + broadly available agents that expose
+//    external MCP servers or declared tools. Review these first.
+AgentsInfo
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
+| where PublishedStatus == "Published"
+| where isnotempty(McpServers) or isnotempty(DeclaredTools)
+| project AgentName, Platform, Availability, McpServers, DeclaredTools, DeclaredDataSources
+
+// 4) Identity view — map each agent to its Entra Agent ID and blueprint (identity template)
+//    and count how many instances share the same blueprint.
+AgentsInfo
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
+| project AgentName, EntraAgentId, EntraBlueprintId, InstanceCount, Owners, SharedWith
+
+// 5) Multi-agent orchestration — agents that connect to other agents (like the concierge
+//    router from Act 12). Useful to understand blast radius.
+AgentsInfo
+| summarize arg_max(Timestamp, *) by AgentId
+| where LifecycleStatus != "Deleted"
+| where isnotempty(ConnectedAgents)
+| project AgentName, ConnectedAgents, DeclaredTools, DeclaredDataSources
+
+// 6) Correlate agents with active alerts — join the inventory to alert evidence to see
+//    which agents currently have security alerts against them.
+let agents = AgentsInfo
+    | summarize arg_max(Timestamp, *) by AgentId
+    | where LifecycleStatus != "Deleted";
+AlertEvidence
+| where Timestamp > ago(7d)
+| join kind=inner agents on $left.EntityType == "Agent" and $left.AgentId == $right.AgentId
+| project Timestamp, AgentName, AlertId, Title = tostring(AdditionalFields), Platform
+
+// 7) Agent activity — Agent 365 observability data (tool invocations, data access) for
+//    a specific agent over the last day. Replace the name filter with your agent.
+CloudAppEvents
+| where Timestamp > ago(1d)
+| where RawEventData has "ContosoMart"
+| project Timestamp, ActionType, AccountDisplayName, Application, RawEventData
+| sort by Timestamp desc
+</content>

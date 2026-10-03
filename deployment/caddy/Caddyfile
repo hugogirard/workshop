@@ -1,0 +1,8 @@
+# Caddy terminates TLS for the ACI FQDN and reverse-proxies to the nginx container.
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS} {
+	reverse_proxy localhost:8080
+}

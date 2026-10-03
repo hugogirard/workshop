@@ -1,0 +1,8 @@
+sku,product_name,category,warehouse,on_hand_qty,reorder_point,unit_cost_usd,last_restock_date
+SKU-COFFEE-500,House Blend Coffee 500g,Beans,YYZ-01,540,150,4.20,2026-01-02
+SKU-MUG-CERAMIC,Ceramic Mug 350ml,Accessories,YYZ-01,120,80,2.10,2026-01-05
+SKU-FILTER-100,Paper Filters 100ct,Accessories,YVR-02,860,300,0.90,2026-01-03
+SKU-GRINDER-PRO,Pro Burr Grinder,Equipment,YYZ-01,44,25,58.00,2025-12-28
+SKU-ESPRESSO-MC,Espresso Machine Compact,Equipment,YVR-02,18,10,142.00,2025-12-20
+SKU-COFFEE-DECAF,Decaf Blend 500g,Beans,YVR-02,210,120,4.60,2026-01-06
+SKU-TUMBLER-STL,Steel Tumbler 450ml,Accessories,YYZ-01,95,60,6.75,2026-01-04

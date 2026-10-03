@@ -1,0 +1,2058 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContosoMart Medallion Lab — Microsoft Fabric</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-cyan));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 72ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.bronze {
+            background: var(--fab-bronze);
+        }
+
+        .chip.silver {
+            background: var(--fab-silver);
+        }
+
+        .chip.gold {
+            background: var(--fab-gold);
+            color: #2b2400;
+        }
+
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 0 0 26px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .flow .node {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            box-shadow: var(--shadow);
+            color: var(--ink);
+        }
+
+        .flow .arrow {
+            color: var(--fab-accent);
+            font-weight: 700;
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-teal);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 10px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks a {
+            margin-right: 14px;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+            font-size: 14px;
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        .step .body ol,
+        .step .body ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .step .body li {
+            margin: 4px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code code {
+            white-space: pre;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .tabs {
+            margin: 12px 0;
+        }
+
+        .tabs .tabbar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tabs .tabbtn {
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface-soft);
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tabs .tabbtn.active {
+            background: var(--code-bg);
+            color: #fff;
+            border-color: var(--code-bg);
+        }
+
+        .tabs .tabpane {
+            display: none;
+        }
+
+        .tabs .tabpane.active {
+            display: block;
+        }
+
+        .tabs .tabpane pre.code {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        table.data {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        table.data th,
+        table.data td {
+            border: 1px solid var(--border);
+            padding: 6px 9px;
+            text-align: left;
+        }
+
+        table.data th {
+            background: var(--surface-soft);
+        }
+
+        /* ---- Estate strip + story bridge ---- */
+        .estate-band {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+            margin: 0 0 24px;
+        }
+
+        .estate {
+            width: 100%;
+            max-width: 660px;
+            height: auto;
+            display: block;
+            margin: 0 auto 4px;
+        }
+
+        .estate text {
+            font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+        }
+
+        .estate .track {
+            stroke: var(--border);
+            stroke-width: 2;
+        }
+
+        .estate .lake {
+            fill: rgba(39, 193, 166, .10);
+            stroke: var(--fab-accent);
+            stroke-dasharray: 4 3;
+        }
+
+        .estate .lake-t {
+            fill: var(--muted);
+            letter-spacing: .3px;
+        }
+
+        .estate .node {
+            fill: var(--surface);
+            stroke: var(--border);
+        }
+
+        .estate .node.on {
+            fill: var(--fab-accent);
+            stroke: var(--fab-accent);
+        }
+
+        .estate .nt {
+            fill: var(--muted);
+            font-weight: 700;
+        }
+
+        .estate .nl {
+            fill: var(--muted);
+        }
+
+        .estate .nl.on {
+            fill: var(--ink);
+            font-weight: 700;
+        }
+
+        .story-so-far {
+            margin: 8px 2px 0;
+            font-size: 13.5px;
+            color: var(--muted);
+            max-width: 96ch;
+        }
+
+        .story-so-far .wk {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-cyan);
+            margin-right: 8px;
+        }
+
+        .story-so-far strong {
+            color: var(--ink);
+        }
+
+        /* ---- Act panel (Recap · Tension · Mission · Outcome) ---- */
+        .act-panel {
+            margin: 10px 2px 0;
+        }
+
+        .act-panel .act-label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-cyan);
+            margin-bottom: 8px;
+        }
+
+        .act-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width:820px) {
+            .act-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .act-cell {
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 11px 13px;
+        }
+
+        .act-cell .t {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--muted);
+        }
+
+        .act-cell.mission {
+            border-color: var(--fab-accent);
+            box-shadow: inset 0 0 0 1px var(--fab-accent);
+        }
+
+        .act-cell p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        /* ---- Concept block (what / why / solves + diagram) ---- */
+        .concept {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--fab-cyan);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+            margin: 10px 0 18px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 18px;
+            align-items: center;
+        }
+
+        @media (max-width:820px) {
+            .concept-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .concept .qa {
+            margin: 0 0 10px;
+        }
+
+        .concept .qa:last-child {
+            margin-bottom: 0;
+        }
+
+        .concept .qa .q {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--fab-teal);
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        html[data-theme="dark"] .concept .qa .q {
+            color: var(--fab-accent);
+        }
+
+        .concept .qa p {
+            margin: 2px 0 0;
+            font-size: 13.5px;
+            color: var(--ink);
+        }
+
+        .cdiag {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .cdiag text {
+            font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+            fill: var(--ink);
+        }
+
+        .cdiag .lbl {
+            fill: var(--muted);
+        }
+
+        .cdiag .box {
+            fill: var(--surface);
+            stroke: var(--border);
+        }
+
+        .cdiag .soft {
+            fill: var(--surface-soft);
+            stroke: var(--border);
+        }
+
+        .cdiag .lake {
+            fill: rgba(39, 193, 166, .10);
+            stroke: var(--fab-accent);
+            stroke-dasharray: 5 4;
+        }
+
+        .cdiag .bronze {
+            fill: var(--fab-bronze);
+        }
+
+        .cdiag .silver {
+            fill: var(--fab-silver);
+        }
+
+        .cdiag .gold {
+            fill: var(--fab-gold);
+        }
+
+        .cdiag .bad {
+            fill: #C24B4B;
+        }
+
+        .cdiag .good {
+            fill: var(--fab-teal);
+        }
+
+        .cdiag .wtext {
+            fill: #fff;
+            font-weight: 600;
+        }
+
+        .cdiag .flow {
+            fill: none;
+            stroke: var(--fab-cyan);
+            stroke-width: 2;
+        }
+
+        .cdiag .arrowhead {
+            fill: var(--fab-cyan);
+        }
+
+        /* ---- Per-step "why" line ---- */
+        .why {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            background: rgba(39, 193, 166, .08);
+            border-radius: 8px;
+            padding: 8px 11px;
+            margin: 0 0 12px;
+            font-size: 13.5px;
+            color: var(--ink);
+        }
+
+        .why .k {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-teal);
+            white-space: nowrap;
+        }
+
+        html[data-theme="dark"] .why .k {
+            color: var(--fab-accent);
+        }
+
+        /* ---- Next-lab bridge ---- */
+        .bridge {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-cyan));
+            color: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 22px;
+            margin: 8px 0 26px;
+        }
+
+        .bridge .nx {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            opacity: .85;
+        }
+
+        .bridge h3 {
+            margin: 4px 0 6px;
+            font-size: 19px;
+        }
+
+        .bridge p {
+            margin: 0;
+            opacity: .93;
+            font-size: 14px;
+            max-width: 90ch;
+        }
+
+        .bridge .go {
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: 700;
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">ContosoMart Medallion Lab<span class="sub">Microsoft Fabric · hands-on</span></div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle light/dark">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <h1>Build a Medallion Lakehouse for ContosoMart</h1>
+                <p>ContosoMart is an online coffee retailer drowning in disconnected data: raw web orders (JSON),
+                    warehouse inventory (CSV), and CRM customers (SQL export). In this hands-on lab you'll land it all
+                    in
+                    OneLake and refine it through <strong>bronze → silver → gold</strong>, then serve a Power BI report
+                    with
+                    Direct Lake — all on a free Microsoft Fabric trial.</p>
+                <div class="chips">
+                    <span class="chip">~100–120 min</span>
+                    <span class="chip bronze">Bronze · raw</span>
+                    <span class="chip silver">Silver · cleansed</span>
+                    <span class="chip gold">Gold · curated</span>
+                </div>
+            </div>
+
+            <div class="flow">
+                <span class="node">Web / Inventory / CRM</span><span class="arrow">→</span>
+                <span class="node">Bronze (raw)</span><span class="arrow">→</span>
+                <span class="node">Silver (clean)</span><span class="arrow">→</span>
+                <span class="node">Gold (curated)</span><span class="arrow">→</span>
+                <span class="node">Power BI (Direct Lake)</span>
+            </div>
+
+            <!-- ===================== MODULE 0 ===================== -->
+            <div class="estate-band">
+                <svg class="estate" viewBox="0 0 660 96" role="img"
+                    aria-label="ContosoMart Fabric estate map — seven workloads over one OneLake; the highlighted node is this lab.">
+                    <line class="track" x1="44" y1="26" x2="616" y2="26"></line>
+                    <circle class="node on" cx="44" cy="26" r="15"></circle><text class="nt" x="44" y="30"
+                        text-anchor="middle" font-size="12" fill="#03261f">1</text><text class="nl on" x="44" y="50"
+                        text-anchor="middle" font-size="9.5">Lakehouse</text>
+                    <circle class="node" cx="139" cy="26" r="15"></circle><text class="nt" x="139" y="30"
+                        text-anchor="middle" font-size="12">2</text><text class="nl" x="139" y="50" text-anchor="middle"
+                        font-size="9.5">Real-Time</text>
+                    <circle class="node" cx="235" cy="26" r="15"></circle><text class="nt" x="235" y="30"
+                        text-anchor="middle" font-size="12">3</text><text class="nl" x="235" y="50" text-anchor="middle"
+                        font-size="9.5">Ingest</text>
+                    <circle class="node" cx="330" cy="26" r="15"></circle><text class="nt" x="330" y="30"
+                        text-anchor="middle" font-size="12">4</text><text class="nl" x="330" y="50" text-anchor="middle"
+                        font-size="9.5">Warehouse</text>
+                    <circle class="node" cx="425" cy="26" r="15"></circle><text class="nt" x="425" y="30"
+                        text-anchor="middle" font-size="12">5</text><text class="nl" x="425" y="50" text-anchor="middle"
+                        font-size="9.5">Zero-copy</text>
+                    <circle class="node" cx="521" cy="26" r="15"></circle><text class="nt" x="521" y="30"
+                        text-anchor="middle" font-size="12">6</text><text class="nl" x="521" y="50" text-anchor="middle"
+                        font-size="9.5">ML</text>
+                    <circle class="node" cx="616" cy="26" r="15"></circle><text class="nt" x="616" y="30"
+                        text-anchor="middle" font-size="12">7</text><text class="nl" x="616" y="50" text-anchor="middle"
+                        font-size="9.5">Govern</text>
+                    <rect class="lake" x="8" y="60" width="644" height="24" rx="8"></rect>
+                    <text class="lake-t" x="330" y="76" text-anchor="middle" font-size="10">OneLake — one open copy,
+                        every engine</text>
+                </svg>
+                <p class="story-so-far"><span class="wk">Act 1 · The mess</span> ContosoMart's data is scattered
+                    across web orders, warehouse inventory and a CRM export — and every team brings a different number
+                    to the Monday standup.</p>
+                <div class="act-panel">
+                    <span class="act-label">Act 1 of 7 · The mess</span>
+                    <div class="act-grid">
+                        <div class="act-cell">
+                            <div class="t">Story so far</div>
+                            <p>You're first in. Nothing is connected yet — this lab starts the whole estate.</p>
+                        </div>
+                        <div class="act-cell">
+                            <div class="t">What's broken</div>
+                            <p>Three silos, mixed date formats, four currencies, duplicate customers, a surprise
+                                stock-out. Nobody trusts "yesterday's sales."</p>
+                        </div>
+                        <div class="act-cell mission">
+                            <div class="t">Your mission</div>
+                            <p>Land all three sources in OneLake and refine them bronze → silver → gold into one
+                                trusted source.</p>
+                        </div>
+                        <div class="act-cell">
+                            <div class="t">You'll leave with</div>
+                            <p>Trusted daily-sales, customer-LTV and reorder tables, served live to Power BI via
+                                Direct Lake.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="module" id="m0" data-title="Setup">
+                <h2><span class="badge">Module 0</span> Set up your Fabric trial</h2>
+                <p class="lead">Get a free 60-day Fabric capacity and a workspace to build in.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
+                        rel="noopener">Fabric trial</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/create-workspaces" target="_blank"
+                        rel="noopener">Create a workspace</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>Fabric is a <strong>SaaS</strong> analytics platform. A <strong>capacity</strong> is
+                                    your pool of compute; a <strong>workspace</strong> is the folder where you create
+                                    <strong>items</strong> — lakehouses, notebooks, reports.
+                                </p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>No servers to provision or wire together. The trial hands you capacity instantly, and
+                                    everything you build shares one billing pool and one OneLake.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>ContosoMart gets a single place to build the whole estate — no infrastructure tickets
+                                    before the first table lands.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="A trial capacity provides compute to the ContosoMart-Analytics workspace, which contains Fabric items.">
+                            <defs>
+                                <marker id="ar0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="soft" x="20" y="14" width="400" height="34" rx="8"></rect>
+                            <text x="220" y="35" text-anchor="middle" font-size="12" font-weight="600">Trial capacity —
+                                shared compute pool</text>
+                            <path class="flow" d="M220 48 L220 66" marker-end="url(#ar0)"></path>
+                            <rect class="box" x="20" y="70" width="400" height="98" rx="10"></rect>
+                            <text x="34" y="90" font-size="11.5" font-weight="600">Workspace ·
+                                ContosoMart-Analytics</text>
+                            <rect class="soft" x="34" y="102" width="118" height="50" rx="8"></rect>
+                            <text x="93" y="131" text-anchor="middle" font-size="11.5">Lakehouse</text>
+                            <rect class="soft" x="161" y="102" width="118" height="50" rx="8"></rect>
+                            <text x="220" y="131" text-anchor="middle" font-size="11.5">Notebook</text>
+                            <rect class="soft" x="288" y="102" width="118" height="50" rx="8"></rect>
+                            <text x="347" y="131" text-anchor="middle" font-size="11.5">Report</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Start the 60-day Fabric trial</span><span
+                            class="est">~5 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>No capacity means no compute to run anything — this
+                            is step zero for the entire estate.</div>
+                        <ol>
+                            <li>Open <a href="https://app.fabric.microsoft.com" target="_blank"
+                                    rel="noopener">app.fabric.microsoft.com</a> and sign in.</li>
+                            <li>Select the <strong>Account manager</strong> (your photo, top-right) → <strong>Start
+                                    trial</strong>.</li>
+                            <li>Agree to the terms and select <strong>Activate</strong>. Pick a trial capacity region
+                                close to you.</li>
+                        </ol>
+                        <div class="callout pro"><span class="k">For data pros</span>The trial capacity is your compute
+                            pool — think of it like a temporary Azure subscription for analytics that's billed to
+                            Microsoft, not you.</div>
+                        <div class="callout note"><span class="k">Note</span>The trial runs 60 days as an
+                            <strong>F4</strong> or <strong>F64</strong> capacity (some tenants can bump F4→F64).
+                            <strong>Copilot / AI features aren't available</strong> in the trial, and you get up to
+                            <strong>1 TB</strong> in OneLake.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Your Account manager shows a
+                            <em>Trial status</em> with days remaining.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m0-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Create the workspace
+                            <code>ContosoMart-Analytics</code></span><span class="est">~3 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>The workspace is the shared container every later lab
+                            writes into, so all ContosoMart data lands in one place.</div>
+                        <ol>
+                            <li>In the left nav, select <strong>Workspaces</strong> → <strong>New workspace</strong>.
+                            </li>
+                            <li>Name it <strong>ContosoMart-Analytics</strong>.</li>
+                            <li>Expand <strong>Advanced</strong> → under <strong>License mode</strong> choose
+                                <strong>Trial</strong> (or Fabric capacity) so it can hold Fabric items.
+                            </li>
+                            <li>Select <strong>Apply</strong>.</li>
+                        </ol>
+                        <div class="callout note"><span class="k">Note</span>File uploads later use the Dataflow/upload
+                            path, which relies on <strong>OneDrive</strong> being configured for your account. If you
+                            don't have it, sign up for the Microsoft 365 free trial.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>An empty
+                            <em>ContosoMart-Analytics</em> workspace opens, assigned to the trial capacity.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 1 ===================== -->
+            <section class="module" id="m1" data-title="Lakehouses">
+                <h2><span class="badge">Module 1</span> Create the lakehouse &amp; layers</h2>
+                <p class="lead">One schema-enabled lakehouse with bronze / silver / gold schemas.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview"
+                        target="_blank" rel="noopener">What is a lakehouse</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-build-lakehouse"
+                        target="_blank" rel="noopener">Create a lakehouse</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture"
+                        target="_blank" rel="noopener">Medallion architecture</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>A <strong>lakehouse</strong> is a database over a data lake. The
+                                    <strong>medallion</strong>
+                                    pattern splits it into three quality layers — <strong>bronze</strong> (raw),
+                                    <strong>silver</strong> (cleansed), <strong>gold</strong> (curated).
+                                </p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>Every layer is open <strong>Delta</strong> in OneLake, so Spark, T-SQL and Power BI
+                                    all
+                                    read the <em>same</em> copy — no exports between stages.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>Raw data is never overwritten, and each refinement is a clear, auditable step — the
+                                    foundation for numbers everyone can trust.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="One lakehouse in OneLake holds bronze, silver and gold schemas as open Delta.">
+                            <rect class="lake" x="16" y="14" width="408" height="156" rx="12"></rect>
+                            <text class="lbl" x="30" y="34" font-size="11">ONELAKE — one open Delta copy</text>
+                            <rect class="box" x="32" y="46" width="376" height="106" rx="10"></rect>
+                            <text x="46" y="66" font-size="11.5" font-weight="600">Lakehouse · lh_contosomart</text>
+                            <rect class="bronze" x="46" y="80" width="110" height="56" rx="8"></rect>
+                            <text class="wtext" x="101" y="104" text-anchor="middle" font-size="12">Bronze</text>
+                            <text x="101" y="122" text-anchor="middle" font-size="9.5" fill="#fff">raw</text>
+                            <rect class="silver" x="166" y="80" width="110" height="56" rx="8"></rect>
+                            <text x="221" y="104" text-anchor="middle" font-size="12" fill="#20262b">Silver</text>
+                            <text x="221" y="122" text-anchor="middle" font-size="9.5" fill="#20262b">cleansed</text>
+                            <rect class="gold" x="286" y="80" width="110" height="56" rx="8"></rect>
+                            <text x="341" y="104" text-anchor="middle" font-size="12" fill="#2b2400">Gold</text>
+                            <text x="341" y="122" text-anchor="middle" font-size="9.5" fill="#2b2400">curated</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m1-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Create lakehouse
+                            <code>lh_contosomart</code></span><span class="est">~4 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>The lakehouse is the home for all three medallion
+                            layers as open Delta — one place every engine can read.</div>
+                        <ol>
+                            <li>In the workspace, select <strong>New item</strong> → search <strong>Lakehouse</strong> →
+                                <strong>Lakehouse</strong>.
+                            </li>
+                            <li>Name it <strong>lh_contosomart</strong> and keep <strong>Lakehouse schemas</strong>
+                                enabled.</li>
+                            <li>Select <strong>Create</strong>. The Lakehouse explorer opens with
+                                <strong>Tables</strong> and <strong>Files</strong> areas.
+                            </li>
+                        </ol>
+                        <div class="callout pro"><span class="k">For data pros</span>A lakehouse is a database over a
+                            data lake. <strong>Tables</strong> is your managed schema (Delta); <strong>Files</strong> is
+                            staging for any format — like a landing zone before you model.</div>
+                        <div class="callout note"><span class="k">Why one lakehouse?</span>To keep every snippet
+                            runnable in a single trial, we use three <em>schemas</em> (<code>bronze</code>,
+                            <code>silver</code>, <code>gold</code>) in one lakehouse. In production, Microsoft
+                            recommends a lakehouse — or workspace — <em>per layer</em> for governance (see the medallion
+                            doc).
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>lh_contosomart</code>
+                            appears in the workspace and opens in the Lakehouse explorer.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m1-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Create the bronze / silver / gold
+                            schemas</span><span class="est">~4 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Separate bronze / silver / gold schemas keep raw,
+                            cleansed and curated data clearly — and safely — apart.</div>
+                        <p>Open a new notebook on this lakehouse (<strong>Open notebook → New notebook</strong>) and
+                            run:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>spark.sql("CREATE SCHEMA IF NOT EXISTS bronze")
+spark.sql("CREATE SCHEMA IF NOT EXISTS silver")
+spark.sql("CREATE SCHEMA IF NOT EXISTS gold")
+spark.sql("SHOW SCHEMAS").show()</code></pre>
+                        <div class="callout verify"><span class="k">Expected result</span><code>SHOW SCHEMAS</code>
+                            lists <code>bronze</code>, <code>silver</code>, and <code>gold</code>. Keep this notebook —
+                            you'll reuse it.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 2 ===================== -->
+            <section class="module" id="m2" data-title="Ingest → Bronze">
+                <h2><span class="badge">Module 2</span> Ingest raw data into Bronze</h2>
+                <p class="lead">Land the three sources exactly as they arrive — no cleansing yet.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-lakehouse-data-ingestion"
+                        target="_blank" rel="noopener">Ingest data</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-shortcuts" target="_blank"
+                        rel="noopener">Shortcuts</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>Ingestion is landing source data into the <strong>bronze</strong> layer <em>exactly
+                                        as it
+                                        arrives</em> — no cleansing, no reshaping.</p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>You can <strong>copy</strong> files in, or create a zero-copy
+                                    <strong>shortcut</strong> to data
+                                    that already lives in OneLake, ADLS, S3 or GCS — both land in bronze as Delta.
+                                </p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>Bronze becomes an immutable source of truth you can always replay from, so a bad
+                                    transform
+                                    downstream never loses the original data.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="Three raw sources land into a bronze table, either copied or shortcut.">
+                            <defs>
+                                <marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="soft" x="16" y="22" width="150" height="30" rx="8"></rect>
+                            <text x="91" y="42" text-anchor="middle" font-size="11">Web orders · JSON</text>
+                            <rect class="soft" x="16" y="68" width="150" height="30" rx="8"></rect>
+                            <text x="91" y="88" text-anchor="middle" font-size="11">Inventory · CSV</text>
+                            <rect class="soft" x="16" y="114" width="150" height="30" rx="8"></rect>
+                            <text x="91" y="134" text-anchor="middle" font-size="11">CRM export · CSV</text>
+                            <path class="flow" d="M166 37 L250 74" marker-end="url(#ar2)"></path>
+                            <path class="flow" d="M166 83 L250 83" marker-end="url(#ar2)"></path>
+                            <path class="flow" d="M166 129 L250 92" marker-end="url(#ar2)"></path>
+                            <rect class="bronze" x="252" y="58" width="172" height="52" rx="10"></rect>
+                            <text class="wtext" x="338" y="82" text-anchor="middle" font-size="12.5">Bronze — landed
+                                as-is</text>
+                            <text x="338" y="100" text-anchor="middle" font-size="9.5" fill="#fff">immutable source of
+                                truth</text>
+                            <text class="lbl" x="252" y="132" font-size="10">Copy now · or zero-copy shortcut
+                                later</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m2-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Upload the sample files to
+                            <code>Files/raw/</code></span><span class="est">~5 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Bronze must capture the sources untouched so you can
+                            always replay from the original if a later transform goes wrong.</div>
+                        <p>Use the files from this workshop's <code>data/</code> folder:</p>
+                        <ul>
+                            <li><code>raw-sales.json</code> — website orders (messy: mixed dates, currencies, test rows)
+                            </li>
+                            <li><code>inventory.csv</code> — warehouse stock levels</li>
+                            <li><code>crm-customers.csv</code> — CRM export (with duplicate customers)</li>
+                        </ul>
+                        <ol>
+                            <li>In the Lakehouse explorer, right-click <strong>Files</strong> → <strong>New
+                                    subfolder</strong> → name it <strong>raw</strong>.</li>
+                            <li>Right-click <strong>raw</strong> → <strong>Upload</strong> → <strong>Upload
+                                    files</strong> and add all three files.</li>
+                        </ol>
+                        <div class="callout pro"><span class="k">For data pros</span>Bronze keeps the source format
+                            untouched — it's your immutable source of truth, like an append-only staging table you never
+                            edit by hand.</div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>Files/raw/</code>
+                            contains the three files.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m2-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Load raw files into Bronze Delta
+                            tables</span><span class="est">~6 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Turning the raw files into Delta tables makes them
+                            queryable and versioned while still preserving the source shape.</div>
+                        <p>In the notebook, load each file as-is into the <code>bronze</code> schema:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>sales = spark.read.option("multiline", "true").json("Files/raw/raw-sales.json")
+sales.write.mode("overwrite").format("delta").saveAsTable("bronze.sales")
+
+inv = (spark.read.option("header", "true").option("inferSchema", "true")
+             .csv("Files/raw/inventory.csv"))
+inv.write.mode("overwrite").format("delta").saveAsTable("bronze.inventory")
+
+cust = (spark.read.option("header", "true").option("inferSchema", "true")
+              .csv("Files/raw/crm-customers.csv"))
+cust.write.mode("overwrite").format("delta").saveAsTable("bronze.customers")
+
+display(spark.table("bronze.sales"))</code></pre>
+                        <div class="callout note"><span class="k">Alternative: shortcuts</span>If the source already
+                            lived in OneLake, ADLS Gen2, S3, or Google, you'd create a <strong>shortcut</strong> in
+                            bronze instead of copying — zero-copy, always live.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>Three tables appear under
+                            <code>Tables/bronze</code>: <code>sales</code> (20 rows), <code>inventory</code> (7),
+                            <code>customers</code> (8).
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 3 ===================== -->
+            <section class="module" id="m3" data-title="Bronze → Silver">
+                <h2><span class="badge">Module 3</span> Cleanse into Silver</h2>
+                <p class="lead">Standardize dates, convert currency to USD, drop test rows, and dedupe customers.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook"
+                        target="_blank" rel="noopener">Use notebooks</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-and-delta-tables"
+                        target="_blank" rel="noopener">Delta tables</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>The <strong>silver</strong> layer is where raw bronze becomes trustworthy:
+                                    standardized
+                                    types, one currency, no test rows, one record per customer.</p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>A Spark <strong>notebook</strong> transforms at scale and writes a governed Delta
+                                    table every
+                                    engine can read — like a cleansing view, but persisted and open.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>This is exactly where the Monday numbers war ends: mixed dates, four currencies and
+                                    duplicate
+                                    customers all get resolved once, for everyone.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="Raw bronze rows with quality problems pass through a cleanse-and-dedupe step into clean silver rows.">
+                            <defs>
+                                <marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="box" x="14" y="24" width="150" height="132" rx="10"></rect>
+                            <text x="89" y="44" text-anchor="middle" font-size="11" font-weight="600">Bronze
+                                (raw)</text>
+                            <circle class="bad" cx="30" cy="66" r="5"></circle><text x="42" y="70"
+                                font-size="10.5">mixed dates</text>
+                            <circle class="bad" cx="30" cy="90" r="5"></circle><text x="42" y="94" font-size="10.5">4
+                                currencies</text>
+                            <circle class="bad" cx="30" cy="114" r="5"></circle><text x="42" y="118"
+                                font-size="10.5">test rows</text>
+                            <circle class="bad" cx="30" cy="138" r="5"></circle><text x="42" y="142"
+                                font-size="10.5">dup customers</text>
+                            <path class="flow" d="M164 90 L182 90" marker-end="url(#ar3)"></path>
+                            <rect class="soft" x="184" y="66" width="72" height="48" rx="8"></rect>
+                            <text x="220" y="86" text-anchor="middle" font-size="10.5">cleanse</text>
+                            <text x="220" y="101" text-anchor="middle" font-size="10.5">dedupe</text>
+                            <path class="flow" d="M256 90 L282 90" marker-end="url(#ar3)"></path>
+                            <rect class="silver" x="284" y="24" width="140" height="132" rx="10"></rect>
+                            <text x="354" y="44" text-anchor="middle" font-size="11" font-weight="600"
+                                fill="#20262b">Silver (clean)</text>
+                            <circle class="good" cx="300" cy="78" r="5"></circle><text x="312" y="82" font-size="10.5"
+                                fill="#20262b">one date type</text>
+                            <circle class="good" cx="300" cy="106" r="5"></circle><text x="312" y="110" font-size="10.5"
+                                fill="#20262b">amount in USD</text>
+                            <circle class="good" cx="300" cy="134" r="5"></circle><text x="312" y="138" font-size="10.5"
+                                fill="#20262b">1 row / customer</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m3-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Clean and standardize the sales
+                            stream</span><span class="est">~10 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>This is where the Monday numbers war is settled — one
+                            date format, one currency (USD), and no test rows.</div>
+                        <p>The raw orders have three problems the silver layer fixes: inconsistent date formats,
+                            four different currencies, and test transactions. Run:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+
+# Illustrative FX rates to USD (teaching values, not live rates)
+fx = {"USD": 1.0, "CAD": 0.73, "EUR": 1.09, "GBP": 1.27}
+fx_map = F.create_map([F.lit(x) for kv in fx.items() for x in kv])
+
+bronze_sales = spark.table("bronze.sales")
+
+silver_sales = (bronze_sales
+    .filter(F.col("is_test") == False)                      # drop test/QA orders
+    .withColumn("customer_ref", F.upper(F.trim("customer_ref")))
+    .withColumn("order_date", F.coalesce(                   # normalize mixed date formats
+        F.to_date("order_date", "yyyy-MM-dd"),
+        F.to_date("order_date", "MM/dd/yyyy"),
+        F.to_date("order_date", "dd-MM-yyyy"),
+        F.to_date("order_date", "yyyy/MM/dd"),
+        F.to_date(F.substring("order_date", 1, 10), "yyyy-MM-dd")))
+    .withColumn("amount_usd", F.round(F.col("amount") * fx_map[F.col("currency")], 2))
+    .select("order_id", "customer_ref", "order_date", "sku", "qty",
+            "currency", "amount", "amount_usd", "channel"))
+
+silver_sales.write.mode("overwrite").format("delta").saveAsTable("silver.sales")
+display(silver_sales.orderBy("order_date"))</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>This is your ELT transform layer —
+                            like a cleansing view or stored proc, but the output is a governed Delta table every engine
+                            can read.</div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>silver.sales</code> has
+                            <strong>18 rows</strong> (2 test orders removed), every <code>order_date</code> is a real
+                            date, and <code>amount_usd</code> is populated for all rows.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m3-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Match &amp; dedupe customers across
+                            systems</span><span class="est">~8 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Duplicate customers inflate counts and split history;
+                            one row per customer makes every downstream metric correct.</div>
+                        <p>The CRM export lists some customers twice with variant country/email values. Standardize
+                            the country and keep one row per customer:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+
+crm = spark.table("bronze.customers")
+
+silver_customers = (crm
+    .withColumn("web_ref", F.upper(F.trim("web_ref")))
+    .withColumn("country", F.when(F.col("country").isin("US", "United States"), "United States")
+                            .when(F.col("country").isin("UK", "United Kingdom"), "United Kingdom")
+                            .otherwise(F.col("country")))
+    .dropDuplicates(["web_ref"])                            # one record per customer
+    .select(F.col("web_ref").alias("customer_ref"),
+            "full_name", "email", "country", "segment", "signup_date"))
+
+silver_customers.write.mode("overwrite").format("delta").saveAsTable("silver.customers")
+display(silver_customers)</code></pre>
+                        <div class="callout verify"><span class="k">Expected result</span><code>silver.customers</code>
+                            collapses to <strong>6 unique customers</strong> (the duplicate <code>C-0007</code> and
+                            <code>C-0044</code> rows merged), each with a standardized country.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 4 ===================== -->
+            <section class="module" id="m4" data-title="Silver → Gold">
+                <h2><span class="badge">Module 4</span> Curate Gold business tables</h2>
+                <p class="lead">Shape analytics-ready tables: daily sales, customer lifetime value, inventory status.
+                </p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture"
+                        target="_blank" rel="noopener">Medallion architecture</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-and-delta-tables"
+                        target="_blank" rel="noopener">Delta tables</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>The <strong>gold</strong> layer holds business-ready tables — aggregated, joined and
+                                    named for
+                                    the questions people actually ask (daily sales, customer value, reorder status).</p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>Build gold once in Spark (or a Warehouse) and it's instantly available to Power BI
+                                    Direct Lake,
+                                    T-SQL and ML — no per-tool remodeling.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>Analysts stop hand-rolling the same aggregations; everyone reports off the same
+                                    curated numbers.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="Silver tables are aggregated and joined into three curated gold business tables.">
+                            <defs>
+                                <marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="silver" x="14" y="44" width="122" height="38" rx="8"></rect>
+                            <text x="75" y="67" text-anchor="middle" font-size="10.5" fill="#20262b">silver.sales</text>
+                            <rect class="silver" x="14" y="100" width="122" height="38" rx="8"></rect>
+                            <text x="75" y="123" text-anchor="middle" font-size="10.5"
+                                fill="#20262b">silver.customers</text>
+                            <path class="flow" d="M136 63 L156 82" marker-end="url(#ar4)"></path>
+                            <path class="flow" d="M136 119 L156 96" marker-end="url(#ar4)"></path>
+                            <rect class="soft" x="158" y="66" width="72" height="46" rx="8"></rect>
+                            <text x="194" y="85" text-anchor="middle" font-size="10.5">group +</text>
+                            <text x="194" y="100" text-anchor="middle" font-size="10.5">join</text>
+                            <path class="flow" d="M230 74 L248 44" marker-end="url(#ar4)"></path>
+                            <path class="flow" d="M230 89 L248 89" marker-end="url(#ar4)"></path>
+                            <path class="flow" d="M230 104 L248 134" marker-end="url(#ar4)"></path>
+                            <rect class="gold" x="250" y="24" width="176" height="38" rx="8"></rect>
+                            <text x="338" y="47" text-anchor="middle" font-size="10.5"
+                                fill="#2b2400">gold.daily_sales</text>
+                            <rect class="gold" x="250" y="70" width="176" height="38" rx="8"></rect>
+                            <text x="338" y="93" text-anchor="middle" font-size="10.5"
+                                fill="#2b2400">gold.customer_ltv</text>
+                            <rect class="gold" x="250" y="116" width="176" height="38" rx="8"></rect>
+                            <text x="338" y="139" text-anchor="middle" font-size="10.5"
+                                fill="#2b2400">gold.inventory_status</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m4-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Build the daily sales table</span><span
+                            class="est">~8 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>A pre-aggregated daily fact means every report and
+                            user reads the same revenue numbers — fast.</div>
+                        <p>Aggregate silver sales into a daily fact table. Do it in PySpark, or preview the equivalent
+                            in T-SQL on the SQL analytics endpoint:</p>
+                        <div class="tabs" data-tabs>
+                            <div class="tabbar">
+                                <button class="tabbtn active" data-tab="py">PySpark (writes gold)</button>
+                                <button class="tabbtn" data-tab="sql">T-SQL (preview)</button>
+                            </div>
+                            <div class="tabpane active" data-pane="py">
+                                <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+
+daily = (spark.table("silver.sales")
+    .groupBy("order_date")
+    .agg(F.round(F.sum("amount_usd"), 2).alias("revenue_usd"),
+         F.sum("qty").alias("units"),
+         F.countDistinct("order_id").alias("orders"))
+    .orderBy("order_date"))
+
+daily.write.mode("overwrite").format("delta").saveAsTable("gold.daily_sales")
+display(daily)</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="sql">
+                                <pre class="code"><button class="copy">Copy</button><code>-- Run in the lakehouse SQL analytics endpoint (read-only)
+SELECT  CAST(order_date AS date)      AS order_date,
+        ROUND(SUM(amount_usd), 2)     AS revenue_usd,
+        SUM(qty)                      AS units,
+        COUNT(DISTINCT order_id)      AS orders
+FROM    silver.sales
+GROUP BY CAST(order_date AS date)
+ORDER BY order_date;</code></pre>
+                            </div>
+                        </div>
+                        <div class="callout note"><span class="k">Note</span>The lakehouse <strong>SQL analytics
+                                endpoint is read-only</strong> — great for validating with T-SQL, but to
+                            <em>persist</em> gold tables in T-SQL you'd use a Fabric <strong>Warehouse</strong> as the
+                            gold layer (medallion "Pattern 2").
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>gold.daily_sales</code>
+                            has one row per order date with <code>revenue_usd</code>, <code>units</code>, and
+                            <code>orders</code>.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m4-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Customer lifetime value (CLV)</span><span
+                            class="est">~6 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Curating lifetime value once lets marketing rank
+                            customers without re-deriving it in every tool.</div>
+                        <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+
+clv = (spark.table("silver.sales")
+    .groupBy("customer_ref")
+    .agg(F.round(F.sum("amount_usd"), 2).alias("lifetime_value_usd"),
+         F.countDistinct("order_id").alias("orders"),
+         F.max("order_date").alias("last_order")))
+
+# enrich with customer attributes from silver
+clv = clv.join(spark.table("silver.customers"), "customer_ref", "left")
+clv.write.mode("overwrite").format("delta").saveAsTable("gold.customer_ltv")
+display(clv.orderBy(F.desc("lifetime_value_usd")))</code></pre>
+                        <div class="callout verify"><span class="k">Expected result</span><code>gold.customer_ltv</code>
+                            ranks customers by USD lifetime value, joined to their name/country/segment.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m4-s3">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Inventory reorder status</span><span
+                            class="est">~5 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Flagging reorder in gold turns raw stock levels into
+                            the signal that prevents the next stock-out.</div>
+                        <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+
+status = (spark.table("bronze.inventory")
+    .withColumn("needs_reorder", F.col("on_hand_qty") < F.col("reorder_point"))
+    .select("sku", "product_name", "category", "on_hand_qty",
+            "reorder_point", "needs_reorder"))
+
+status.write.mode("overwrite").format("delta").saveAsTable("gold.inventory_status")
+display(status.filter("needs_reorder = true"))</code></pre>
+                        <div class="callout verify"><span class="k">Expected
+                                result</span><code>gold.inventory_status</code> flags each SKU; the filtered view shows
+                            items at/under their reorder point.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 5 ===================== -->
+            <section class="module" id="m5" data-title="Serve & Visualize">
+                <h2><span class="badge">Module 5</span> Serve with Direct Lake &amp; Power BI</h2>
+                <p class="lead">Turn gold into a semantic model and a report — no data copy.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/direct-lake-overview" target="_blank"
+                        rel="noopener">Direct Lake</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-build-lakehouse"
+                        target="_blank" rel="noopener">Semantic model &amp; report</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p>A <strong>semantic model</strong> is the Power BI layer (tables, relationships,
+                                    measures) that
+                                    reports sit on. <strong>Direct Lake</strong> points it straight at gold Delta in
+                                    OneLake.</p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>Direct Lake gives Import-mode speed with <strong>no scheduled refresh and no second
+                                        copy</strong> —
+                                    it reads the Delta files in place.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>Priya's report always reflects the latest gold write, with no ETL-into-Power-BI and
+                                    no stale
+                                    overnight refresh.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="Gold Delta tables in OneLake are read by a Direct Lake semantic model and served to a Power BI report with no copy.">
+                            <defs>
+                                <marker id="ar5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="lake" x="14" y="40" width="156" height="104" rx="10"></rect>
+                            <text class="lbl" x="28" y="60" font-size="10.5">ONELAKE</text>
+                            <rect class="gold" x="30" y="74" width="124" height="52" rx="8"></rect>
+                            <text x="92" y="98" text-anchor="middle" font-size="10.5" fill="#2b2400">gold Delta</text>
+                            <text x="92" y="114" text-anchor="middle" font-size="9.5" fill="#2b2400">tables</text>
+                            <path class="flow" d="M170 92 L198 92" marker-end="url(#ar5)"></path>
+                            <rect class="box" x="200" y="64" width="104" height="56" rx="10"></rect>
+                            <text x="252" y="88" text-anchor="middle" font-size="11" font-weight="600">Direct
+                                Lake</text>
+                            <text x="252" y="105" text-anchor="middle" font-size="9.5" class="lbl">no copy · no
+                                refresh</text>
+                            <path class="flow" d="M304 92 L332 92" marker-end="url(#ar5)"></path>
+                            <rect class="box" x="334" y="64" width="92" height="56" rx="10"></rect>
+                            <text x="380" y="88" text-anchor="middle" font-size="11" font-weight="600">Power BI</text>
+                            <text x="380" y="105" text-anchor="middle" font-size="9.5" class="lbl">report</text>
+                            <text class="lbl" x="92" y="162" text-anchor="middle" font-size="10">one copy — read in
+                                place</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m5-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Create a Direct Lake semantic model over
+                            Gold</span><span class="est">~6 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Direct Lake over gold gives Power BI a fast model
+                            with no extra copy to build or refresh.</div>
+                        <ol>
+                            <li>Open <code>lh_contosomart</code> and switch to the <strong>SQL analytics
+                                    endpoint</strong> (top-right dropdown).</li>
+                            <li>Select <strong>New semantic model</strong>.</li>
+                            <li>Name it <strong>ContosoMart Gold</strong> and select the <code>gold</code> tables:
+                                <code>daily_sales</code>, <code>customer_ltv</code>, <code>inventory_status</code>.
+                            </li>
+                            <li>Select <strong>Confirm</strong>.</li>
+                        </ol>
+                        <div class="callout pro"><span class="k">For data pros</span>Direct Lake reads the Delta files
+                            in OneLake directly into the VertiPaq engine — Import-mode speed with no scheduled refresh
+                            copy. The curated <strong>gold layer is the ideal Direct Lake source</strong>.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>A semantic model
+                            <em>ContosoMart Gold</em> is created in <strong>Direct Lake</strong> storage mode.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m5-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Build the report</span><span
+                            class="est">~8 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>The report is what turns trusted gold tables into
+                            decisions people actually see and act on.</div>
+                        <ol>
+                            <li>In the workspace, find <strong>ContosoMart Gold</strong> → <strong>...</strong> →
+                                <strong>Auto-create report</strong> for a fast start.
+                            </li>
+                            <li>Or select <strong>Create report</strong> and build: a line chart of
+                                <code>revenue_usd</code> by <code>order_date</code>,
+                                a bar chart of top customers by <code>lifetime_value_usd</code>, and a table of SKUs
+                                where <code>needs_reorder = true</code>.
+                            </li>
+                            <li><strong>Save</strong> the report as <strong>ContosoMart Overview</strong>.</li>
+                        </ol>
+                        <div class="callout verify"><span class="k">Expected result</span>An interactive report showing
+                            the daily revenue trend, top customers, and reorder alerts — reading live from gold.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ===================== MODULE 6 ===================== -->
+            <section class="module" id="m6" data-title="Govern & Optimize">
+                <h2><span class="badge">Module 6</span> Govern &amp; optimize</h2>
+                <p class="lead">Secure sensitive columns/rows and tune Delta for fast, lean reads.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/onelake/security/get-started-security"
+                        target="_blank" rel="noopener">OneLake security</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/onelake/security/table-column-row-security"
+                        target="_blank" rel="noopener">Row/column security</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/delta-optimization-and-v-order"
+                        target="_blank" rel="noopener">V-Order</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/delta-lake-vacuum"
+                        target="_blank" rel="noopener">VACUUM</a>
+                </p>
+
+                <div class="concept">
+                    <div class="concept-grid">
+                        <div>
+                            <div class="qa"><span class="q">What it is</span>
+                                <p><strong>OneLake security</strong> defines table / column / row rules;
+                                    <strong>V-Order</strong>,
+                                    <strong>OPTIMIZE</strong> and <strong>VACUUM</strong> keep Delta files fast and
+                                    lean.
+                                </p>
+                            </div>
+                            <div class="qa"><span class="q">Why in Fabric</span>
+                                <p>A security role is enforced <em>once</em> and applies across SQL, Spark and Power BI
+                                    — you don't
+                                    re-implement row-level security per tool.</p>
+                            </div>
+                            <div class="qa"><span class="q">What it solves</span>
+                                <p>Lena can hide cost columns and scope rows for viewers, while reads stay fast as the
+                                    data grows —
+                                    governance and performance without extra copies.</p>
+                            </div>
+                        </div>
+                        <svg class="cdiag" viewBox="0 0 440 184" role="img"
+                            aria-label="A OneLake security role hides a cost column and filters rows so a viewer sees only allowed data; optimize and vacuum keep files lean.">
+                            <defs>
+                                <marker id="ar6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
+                                    orient="auto-start-reverse">
+                                    <path class="arrowhead" d="M0 0 L10 5 L0 10 z"></path>
+                                </marker>
+                            </defs>
+                            <rect class="box" x="14" y="22" width="120" height="92" rx="10"></rect>
+                            <text x="74" y="42" text-anchor="middle" font-size="10.5" font-weight="600">gold
+                                table</text>
+                            <text x="74" y="62" text-anchor="middle" font-size="9.5" class="lbl">all rows</text>
+                            <text x="74" y="78" text-anchor="middle" font-size="9.5" class="lbl">+ cost column</text>
+                            <path class="flow" d="M134 68 L156 68" marker-end="url(#ar6)"></path>
+                            <rect class="soft" x="158" y="44" width="100" height="48" rx="8"></rect>
+                            <text x="208" y="63" text-anchor="middle" font-size="10">OneLake role</text>
+                            <text x="208" y="78" text-anchor="middle" font-size="9.5" class="lbl">hide cost · filter
+                                rows</text>
+                            <path class="flow" d="M258 68 L280 68" marker-end="url(#ar6)"></path>
+                            <rect class="box" x="282" y="22" width="142" height="92" rx="10"></rect>
+                            <text x="353" y="42" text-anchor="middle" font-size="10.5" font-weight="600">Viewer
+                                sees</text>
+                            <text x="353" y="62" text-anchor="middle" font-size="9.5" class="good">allowed rows
+                                only</text>
+                            <text x="353" y="80" text-anchor="middle" font-size="9.5" class="good">cost hidden</text>
+                            <text class="lbl" x="220" y="150" text-anchor="middle" font-size="10">V-Order + OPTIMIZE +
+                                VACUUM → fast, lean reads</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <details class="step" data-step="m6-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Add a OneLake security role (hide cost,
+                            filter rows)</span><span class="est">~8 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Analysts need the data but not the costs — one role
+                            scopes columns and rows across every engine at once.</div>
+                        <p>Give analysts read access to inventory <em>without</em> the <code>unit_cost_usd</code> column
+                            and only for their region:</p>
+                        <ol>
+                            <li>Open <code>lh_contosomart</code> → <strong>Manage OneLake security</strong> (or
+                                <strong>Manage roles</strong>).
+                            </li>
+                            <li>Create a role <strong>AnalystRead</strong> and grant it on
+                                <code>gold.inventory_status</code> and <code>gold.daily_sales</code>.
+                            </li>
+                            <li>Apply <strong>column-level security</strong> to exclude a sensitive column (e.g. cost),
+                                and add a
+                                <strong>row-level</strong> filter (e.g. <code>category = 'Beans'</code>) to scope the
+                                rows.
+                            </li>
+                            <li>Add a test <strong>Viewer</strong> user to the role.</li>
+                        </ol>
+                        <div class="callout pro"><span class="k">For data pros</span>OneLake security roles enforce
+                            table/column/row rules <em>once</em> and apply them across SQL, Spark, and Power BI — no
+                            need to re-implement RLS per tool. Workspace Admins/Members/Contributors already have full
+                            data access; roles mainly scope <strong>Viewers</strong>.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>Signed in as the Viewer,
+                            querying the table returns only the allowed rows and hides the secured column.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m6-s2">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Optimize Delta with V-Order</span><span
+                            class="est">~4 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Compacting and V-Ordering keeps reads fast as data
+                            grows, so reports stay snappy over time.</div>
+                        <pre class="code"><button class="copy">Copy</button><code># V-Order write optimization speeds reads by Power BI / SQL / Spark
+spark.conf.set("spark.sql.parquet.vorder.enabled", "true")
+
+# Compact small files and apply V-Order to the gold fact table
+spark.sql("OPTIMIZE gold.daily_sales")</code></pre>
+                        <div class="callout note"><span class="k">Note</span>Fabric writes Delta with V-Order by
+                            default. Target file sizes of <strong>128 MB–1 GB</strong> in gold, and use <strong>Liquid
+                                Clustering</strong> (not partitioning) for silver/gold on new implementations.</div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>OPTIMIZE</code> reports
+                            the number of files compacted for <code>gold.daily_sales</code>.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m6-s3">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Reclaim storage with VACUUM &amp; wrap
+                            up</span><span class="est">~4 min</span></summary>
+                    <div class="body">
+                        <div class="why"><span class="k">Why</span>Vacuuming reclaims storage from old files while
+                            keeping enough history for safe time travel.</div>
+                        <pre class="code"><button class="copy">Copy</button><code># Remove old data files no longer referenced (7-day minimum retention)
+spark.sql("VACUUM gold.daily_sales RETAIN 168 HOURS")</code></pre>
+                        <div class="callout note"><span class="k">Note</span>Delta keeps history for <strong>time
+                                travel</strong>; VACUUM trims files older than the retention window. By default you
+                            can't vacuum below <strong>7 days (168 hours)</strong>, which protects consistency.</div>
+                        <div class="callout verify"><span class="k">You did it 🎉</span>You ingested three raw sources,
+                            refined them through bronze→silver→gold, served a Direct Lake report, and secured +
+                            optimized the lakehouse — a complete medallion architecture on Microsoft Fabric.</div>
+                        <div class="callout pro"><span class="k">Next</span>Explore <strong>materialized lake
+                                views</strong> to declare the bronze→silver→gold pipeline in SQL with automatic
+                            dependency ordering, and <strong>domains</strong> to grow this into a data mesh.</div>
+                    </div>
+                </details>
+            </section>
+
+            <a class="bridge" href="../realtime-intelligence/index.html">
+                <div class="nx">Story continues · Act 2 of 7</div>
+                <h3>Peak season → Real-Time Intelligence</h3>
+                <p>ContosoMart now has one trusted source and a Direct Lake report — but it's all
+                    <em>yesterday's</em> data. A promo is about to hit: carts are being abandoned in real time and a
+                    cold-store fridge is warming up. Next, you'll stream the storefront clickstream and IoT into an
+                    Eventhouse, watch a live dashboard, and fire Activator alerts.
+                </p>
+                <span class="go">Start Lab 2 →</span>
+            </a>
+
+        </main>
+    </div>
+
+    <footer class="foot">
+        ContosoMart Medallion Lab &middot; Grounded in Microsoft Learn (see <code>spec.md</code>). Sample data is
+        synthetic. Part of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:ecommerce-medallion";
+
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+
+        document.querySelectorAll("[data-tabs]").forEach(group => {
+            group.querySelectorAll(".tabbtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    group.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+                    group.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    group.querySelector(`[data-pane="${btn.dataset.tab}"]`).classList.add("active");
+                });
+            });
+        });
+
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

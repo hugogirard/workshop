@@ -1,0 +1,7 @@
+domain,subdomain,workspace,data_product,owner_role,endorsement
+Sales,Storefront,ContosoMart-Analytics,gold.daily_sales,Domain admin,Certified
+Sales,Storefront,ContosoMart-Analytics,gold.customer_ltv,Domain admin,Certified
+Marketing,Web,ContosoMart-Analytics,Clickstream (Eventhouse),Domain contributor,Promoted
+Finance,Reporting,ContosoMart-Analytics,wh_contoso_finance.vw_sales,Domain admin,Certified
+Operations,Supply,ContosoMart-Analytics,gold.demand_forecast,Domain contributor,Promoted
+Operations,Supply,ContosoMart-Analytics,inventory (mirrored),Domain contributor,None

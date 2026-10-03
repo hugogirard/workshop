@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContosoMart Data Factory Ingestion Lab — Microsoft Fabric</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            counter-reset: mod;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-cyan));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 70ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.ingest {
+            background: var(--fab-blue);
+        }
+
+        .chip.transform {
+            background: var(--fab-cyan);
+        }
+
+        .chip.orchestrate {
+            background: var(--fab-gold);
+            color: #2b2400;
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-teal);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 16px;
+        }
+
+        .module .srclinks a {
+            margin-right: 12px;
+        }
+
+        .learnmore {
+            background: var(--surface-soft);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin: 0 0 16px;
+        }
+
+        .learnmore .k {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            font-size: 11px;
+            color: var(--fab-cyan);
+            margin-right: 6px;
+        }
+
+        .learnmore a {
+            margin-right: 14px;
+            white-space: nowrap;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .tabs {
+            margin: 10px 0;
+        }
+
+        .tabs .tabbar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tabs .tabbtn {
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface-soft);
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tabs .tabbtn.active {
+            background: var(--code-bg);
+            color: #fff;
+            border-color: var(--code-bg);
+        }
+
+        .tabs .tabpane {
+            display: none;
+        }
+
+        .tabs .tabpane.active {
+            display: block;
+        }
+
+        .tabs .tabpane pre.code {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        /* ---- Estate strip + story bridge ---- */
+        .estate-band {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+            margin: 0 0 24px;
+        }
+
+        .estate {
+            width: 100%;
+            max-width: 660px;
+            height: auto;
+            display: block;
+            margin: 0 auto 4px;
+        }
+
+        .estate text {
+            font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+        }
+
+        .estate .track {
+            stroke: var(--border);
+            stroke-width: 2;
+        }
+
+        .estate .lake {
+            fill: rgba(39, 193, 166, .10);
+            stroke: var(--fab-accent);
+            stroke-dasharray: 4 3;
+        }
+
+        .estate .lake-t {
+            fill: var(--muted);
+            letter-spacing: .3px;
+        }
+
+        .estate .node {
+            fill: var(--surface);
+            stroke: var(--border);
+        }
+
+        .estate .node.on {
+            fill: var(--fab-accent);
+            stroke: var(--fab-accent);
+        }
+
+        .estate .nt {
+            fill: var(--muted);
+            font-weight: 700;
+        }
+
+        .estate .nl {
+            fill: var(--muted);
+        }
+
+        .estate .nl.on {
+            fill: var(--ink);
+            font-weight: 700;
+        }
+
+        .story-so-far {
+            margin: 8px 2px 0;
+            font-size: 13.5px;
+            color: var(--muted);
+            max-width: 96ch;
+        }
+
+        .story-so-far .wk {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-cyan);
+            margin-right: 8px;
+        }
+
+        .story-so-far strong {
+            color: var(--ink);
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">ContosoMart Data Factory Ingestion<span class="sub">Microsoft Fabric hands-on lab</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <h1>ContosoMart Data Factory Ingestion</h1>
+                <p>In the <a href="../ecommerce-medallion/index.html" style="color:#cfeffa">medallion lab</a>
+                    you uploaded bronze files by hand. That doesn't scale. Here you automate it with
+                    <strong>Data Factory</strong>: clean a supplier price list with Dataflow Gen2, land
+                    date-partitioned sales with a Copy activity, make it incremental, and orchestrate the
+                    whole thing on a schedule.
+                </p>
+                <div class="chips">
+                    <span class="chip">Hands-on lab</span>
+                    <span class="chip ingest">Ingest</span>
+                    <span class="chip transform">Transform</span>
+                    <span class="chip orchestrate">Orchestrate</span>
+                </div>
+            </div>
+
+            <!-- ================= MODULE 0 ================= -->
+            <div class="estate-band">
+                <svg class="estate" viewBox="0 0 660 96" role="img"
+                    aria-label="ContosoMart Fabric estate map — seven workloads over one OneLake; the highlighted node is this lab.">
+                    <line class="track" x1="44" y1="26" x2="616" y2="26"></line>
+                    <circle class="node" cx="44" cy="26" r="15"></circle><text class="nt" x="44" y="30"
+                        text-anchor="middle" font-size="12">1</text><text class="nl" x="44" y="50" text-anchor="middle"
+                        font-size="9.5">Lakehouse</text>
+                    <circle class="node" cx="139" cy="26" r="15"></circle><text class="nt" x="139" y="30"
+                        text-anchor="middle" font-size="12">2</text><text class="nl" x="139" y="50" text-anchor="middle"
+                        font-size="9.5">Real-Time</text>
+                    <circle class="node on" cx="235" cy="26" r="15"></circle><text class="nt" x="235" y="30"
+                        text-anchor="middle" font-size="12" fill="#03261f">3</text><text class="nl on" x="235" y="50"
+                        text-anchor="middle" font-size="9.5">Ingest</text>
+                    <circle class="node" cx="330" cy="26" r="15"></circle><text class="nt" x="330" y="30"
+                        text-anchor="middle" font-size="12">4</text><text class="nl" x="330" y="50" text-anchor="middle"
+                        font-size="9.5">Warehouse</text>
+                    <circle class="node" cx="425" cy="26" r="15"></circle><text class="nt" x="425" y="30"
+                        text-anchor="middle" font-size="12">5</text><text class="nl" x="425" y="50" text-anchor="middle"
+                        font-size="9.5">Zero-copy</text>
+                    <circle class="node" cx="521" cy="26" r="15"></circle><text class="nt" x="521" y="30"
+                        text-anchor="middle" font-size="12">6</text><text class="nl" x="521" y="50" text-anchor="middle"
+                        font-size="9.5">ML</text>
+                    <circle class="node" cx="616" cy="26" r="15"></circle><text class="nt" x="616" y="30"
+                        text-anchor="middle" font-size="12">7</text><text class="nl" x="616" y="50" text-anchor="middle"
+                        font-size="9.5">Govern</text>
+                    <rect class="lake" x="8" y="60" width="644" height="24" rx="8"></rect>
+                    <text class="lake-t" x="330" y="76" text-anchor="middle" font-size="10">OneLake — one open copy,
+                        every engine</text>
+                </svg>
+                <p class="story-so-far"><span class="wk">Act 3 · No more manual uploads</span>
+                    <strong>Story so far:</strong> the medallion works, but someone re-uploads bronze files by hand
+                    every morning. <strong>Your mission:</strong> automate ingestion with Dataflow Gen2 and incremental
+                    pipelines, orchestrated on a schedule.
+                </p>
+            </div>
+
+            <section class="module" id="m0" data-title="Setup">
+                <h2><span class="badge">Module 0</span> Set up &amp; why automate ingest</h2>
+                <p class="lead">Data Factory is Fabric's data-integration workload — it connects to
+                    170+ sources, moves data at scale, transforms it, and orchestrates the whole flow.
+                    Manual uploads are fine for a demo; a real store needs bronze to refresh itself.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/data-factory-overview"
+                        target="_blank" rel="noopener">What is Data Factory</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
+                        rel="noopener">Fabric trial</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/data-factory-overview"
+                        target="_blank" rel="noopener">Data Factory overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/connector-overview" target="_blank"
+                        rel="noopener">170+ connectors</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/decision-guide-data-movement"
+                        target="_blank" rel="noopener">Data movement decision guide</a>
+                </div>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">ETL vs ELT, and why Data Factory</span>
+                        <span class="est">~5 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Data integration is bringing scattered data
+                            together. <em>ETL</em> transforms before loading (Dataflow Gen2); <em>ELT</em>
+                            loads raw then transforms in place (Copy → Spark/SQL). Fabric supports both —
+                            this lab uses ETL for the price list and ELT for daily sales.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>Fabric Data Factory is
+                            the next generation of Azure Data Factory / SSIS — same pipeline mental model
+                            (activities, dependencies, triggers), delivered as SaaS with OneLake as the sink.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>You can say when
+                            you'd pick Dataflow Gen2 (clean-before-load) vs a Copy activity (move raw, fast).</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m0-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Reuse the ContosoMart workspace</span>
+                        <span class="est">~4 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Keep everything in
+                            <code>ContosoMart-Analytics</code> so these automated loads feed the same
+                            medallion lakehouse you built before.
+                        </p>
+                        <div class="callout note"><span class="k">Note</span>Dataflow Gen2 and the upload
+                            path use <strong>OneDrive</strong> — make sure it's configured for your account.
+                            Trial is F4/F64, no Copilot.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>You're in
+                            <code>ContosoMart-Analytics</code> on Trial capacity.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 1 ================= -->
+            <section class="module" id="m1" data-title="Lakehouse target">
+                <h2><span class="badge">Module 1</span> Confirm the bronze target</h2>
+                <p class="lead">Every ingest needs a <em>sink</em>. We reuse the medallion lakehouse
+                    <code>lh_contosomart</code> and its <code>bronze</code> schema as the destination for
+                    both the Dataflow and the pipeline.
+                </p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview"
+                        target="_blank" rel="noopener">What is a lakehouse</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview"
+                        target="_blank" rel="noopener">Lakehouse overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-end-to-end-introduction"
+                        target="_blank" rel="noopener">Data Factory tutorial</a>
+                </div>
+
+                <details class="step" data-step="m1-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Reuse <code>lh_contosomart</code> (or create it)</span>
+                        <span class="est">~5 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> If you did the medallion lab, the lakehouse
+                            already exists with a <code>bronze</code> schema. If not, create a schema-enabled
+                            lakehouse <code>lh_contosomart</code> now so the destinations below resolve.</p>
+                        <div class="callout note"><span class="k">Note</span>Both Dataflow Gen2 and Copy
+                            activity can create the destination table on first run — but the lakehouse and
+                            schema must exist.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>A lakehouse
+                            <code>lh_contosomart</code> with a <code>bronze</code> schema is visible.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 2 ================= -->
+            <section class="module" id="m2" data-title="Dataflow Gen2">
+                <h2><span class="badge">Module 2</span> Clean-and-load with Dataflow Gen2</h2>
+                <p class="lead"><strong>Dataflow Gen2</strong> is low-code ELT built on Power Query — 300+
+                    transforms, a visual preview, and a lakehouse <em>data destination</em>. Perfect for the
+                    messy supplier price list: trim, fix types, standardize currency, then land it in bronze.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview"
+                        target="_blank" rel="noopener">Dataflow Gen2 overview</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview"
+                        target="_blank" rel="noopener">Dataflow Gen2</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/dataflow-gen2-data-destinations-and-managed-settings"
+                        target="_blank" rel="noopener">Data destinations</a>
+                    <a href="https://learn.microsoft.com/en-us/power-query/power-query-what-is-power-query"
+                        target="_blank" rel="noopener">Power Query</a>
+                </div>
+
+                <details class="step" data-step="m2-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Build the price-list Dataflow</span>
+                        <span class="est">~15 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Clean the data as it loads so bronze is usable.
+                            Create <strong>+ New → Dataflow Gen2</strong>, <strong>Get data → Text/CSV</strong>,
+                            upload <code>supplier-prices.csv</code>, then apply: trim text columns, set
+                            <code>unit_cost</code> to decimal and <code>effective_date</code> to date.
+                        </p>
+                        <div class="tabs" data-tabs>
+                            <div class="tabbar">
+                                <button class="tabbtn active" data-tab="ui">Transforms (UI)</button>
+                                <button class="tabbtn" data-tab="m">Power Query (M)</button>
+                            </div>
+                            <div class="tabpane active" data-pane="ui">
+                                <pre class="code"><button class="copy">Copy</button><code>1. Use first row as headers
+2. Trim + Clean on product_name, sku, currency
+3. Change type: unit_cost -> Decimal, effective_date -> Date
+4. Keep latest effective_date per (supplier_id, sku)</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="m">
+                                <pre class="code"><button class="copy">Copy</button><code>let
+    Source = Csv.Document(File.Contents("supplier-prices.csv"),
+        [Delimiter=",", Columns=6, Encoding=65001]),
+    Prom   = Table.PromoteHeaders(Source),
+    Trim   = Table.TransformColumns(Prom,
+        {{"product_name", Text.Trim}, {"sku", Text.Trim}, {"currency", Text.Trim}}),
+    Typed  = Table.TransformColumnTypes(Trim,
+        {{"unit_cost", type number}, {"effective_date", type date}})
+in
+    Typed</code></pre>
+                            </div>
+                        </div>
+                        <div class="callout pro"><span class="k">For data pros</span>Power Query's M is a
+                            functional, step-by-step transform script — each applied step is a named,
+                            reorderable line, so the whole cleanse is auditable (unlike a black-box script).</div>
+                        <div class="callout note"><span class="k">Note</span>Set the <strong>Data
+                                destination</strong> to <code>lh_contosomart</code> → table
+                            <code>bronze.supplier_prices</code>, update method <em>Replace</em>.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Publishing +
+                            refreshing the Dataflow creates <code>bronze.supplier_prices</code> with trimmed
+                            names and typed columns.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 3 ================= -->
+            <section class="module" id="m3" data-title="Copy activity">
+                <h2><span class="badge">Module 3</span> Move data with a pipeline Copy activity</h2>
+                <p class="lead">A <strong>Copy activity</strong> moves data from a source to a sink at any
+                    scale — the workhorse for raw ingestion. Here a pipeline lands the day-1 sales extract
+                    into <code>bronze.daily_sales</code> with no transformation (pure ELT).</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/copy-data-activity" target="_blank"
+                        rel="noopener">Copy activity</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/what-is-copy-job" target="_blank"
+                        rel="noopener">Copy job</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/copy-data-activity" target="_blank"
+                        rel="noopener">Copy activity</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/what-is-copy-job" target="_blank"
+                        rel="noopener">Copy job (CDC)</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/connector-overview" target="_blank"
+                        rel="noopener">Connectors</a>
+                </div>
+
+                <details class="step" data-step="m3-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Create a pipeline + Copy activity</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Pipelines are the orchestration canvas; a Copy
+                            activity is one box on it. Create <strong>+ New → Data pipeline</strong>
+                            <code>pl_bronze_ingest</code>, add a <strong>Copy data</strong> activity.
+                        </p>
+                        <pre class="code"><button class="copy">Copy</button><code>Source: Upload/OneLake file  data/daily-sales-2026-03-01.csv  (CSV, first row = header)
+Sink:   Lakehouse  lh_contosomart  ->  Table  bronze.daily_sales  (append)</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>Think
+                            <code>bcp</code> / <code>COPY</code>, but with 170+ source connectors, parallel
+                            copy, schema mapping, and fault tolerance built in.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Run the pipeline;
+                            <code>bronze.daily_sales</code> has the 4 day-1 orders.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 4 ================= -->
+            <section class="module" id="m4" data-title="Incremental">
+                <h2><span class="badge">Module 4</span> Parameterize &amp; go incremental</h2>
+                <p class="lead">Reprocessing every file every day is wasteful and error-prone. Parameterize
+                    the source by date so each run only ingests the <em>new</em> partition — the essence of
+                    incremental loading.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs" target="_blank"
+                        rel="noopener">Pipeline runs</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/copy-data-activity" target="_blank"
+                        rel="noopener">Copy activity</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/parameters" target="_blank"
+                        rel="noopener">Pipeline parameters</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/expression-language" target="_blank"
+                        rel="noopener">Expression language</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/what-is-copy-job" target="_blank"
+                        rel="noopener">Incremental copy</a>
+                </div>
+
+                <details class="step" data-step="m4-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Add a <code>runDate</code> parameter</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> A parameter makes one pipeline reusable for any
+                            day. Add a pipeline parameter <code>runDate</code> and build the file name
+                            dynamically in the Copy source path.</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Parameter:  runDate  (string, default 2026-03-02)
+Source file (dynamic):
+    @concat('daily-sales-', pipeline().parameters.runDate, '.csv')</code></pre>
+                        <p>Run once with <code>runDate = 2026-03-02</code> to append day 2 only.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>This is the
+                            watermark/partition pattern: the pipeline is idempotent per date, so a re-run of
+                            day 1 never double-loads day 2. For DB sources, <strong>Copy job</strong> does
+                            true CDC/incremental automatically.</div>
+                        <div class="callout note"><span class="k">Note</span>Use <em>append</em>, not
+                            <em>replace</em>, so partitions accumulate. Real pipelines often store the last
+                            watermark in a control table.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected
+                                result</span><code>bronze.daily_sales</code>
+                            now holds 7 rows (day 1 + day 2) after the parameterized run.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 5 ================= -->
+            <section class="module" id="m5" data-title="Orchestrate">
+                <h2><span class="badge">Module 5</span> Orchestrate the end-to-end flow</h2>
+                <p class="lead">Ingestion rarely runs alone. Chain the Dataflow, the Copy, and the silver
+                    Notebook into one pipeline with <em>success dependencies</em> and a schedule — so bronze
+                    loads then silver cleanses, automatically, every morning.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs" target="_blank"
+                        rel="noopener">Pipeline runs &amp; scheduling</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook"
+                        target="_blank" rel="noopener">Notebooks</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/activity-overview" target="_blank"
+                        rel="noopener">Activities &amp; control flow</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs" target="_blank"
+                        rel="noopener">Schedules &amp; triggers</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook"
+                        target="_blank" rel="noopener">Notebook activity</a>
+                </div>
+
+                <details class="step" data-step="m5-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Chain Dataflow → Copy → Notebook</span>
+                        <span class="est">~15 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Dependencies enforce order and safety — silver
+                            only runs if bronze succeeded. On the pipeline canvas add the three activities and
+                            connect them <strong>On success</strong>:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>[Dataflow: clean supplier_prices]
+        └─(on success)─> [Copy: daily_sales]
+                                └─(on success)─> [Notebook: bronze -> silver cleanse]</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>This is a DAG — the
+                            same control-flow model as SSIS precedence constraints or Airflow tasks, drawn
+                            on a low-code canvas.</div>
+                        <div class="callout note"><span class="k">Note</span>Reuse the silver PySpark notebook
+                            from the medallion lab as the third activity. Then <strong>Schedule</strong> the
+                            pipeline (e.g. daily 06:00).</div>
+                        <div class="callout verify"><span class="k">Expected result</span>A single run turns
+                            green end-to-end: bronze refreshed, then silver rebuilt.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 6 ================= -->
+            <section class="module" id="m6" data-title="Monitor & govern">
+                <h2><span class="badge">Module 6</span> Monitor, retry &amp; govern</h2>
+                <p class="lead">A pipeline you can't see is a pipeline you can't trust. Use run history,
+                    retries and failure alerts to make the ingest reliable and observable — the operational
+                    half of data integration.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs" target="_blank"
+                        rel="noopener">Monitor pipeline runs</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs" target="_blank"
+                        rel="noopener">Run history</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/monitor-pipeline-runs"
+                        target="_blank" rel="noopener">Monitoring hub</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-storage-event-triggers"
+                        target="_blank" rel="noopener">Event triggers</a>
+                </div>
+
+                <details class="step" data-step="m6-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Add retries &amp; a failure alert</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Transient failures happen; automatic retries and
+                            an alert keep small blips from becoming missed loads. On the Copy activity set
+                            <strong>Retry = 2</strong>, <strong>Retry interval = 30s</strong>. Add an
+                            <strong>Office 365 Outlook / Teams</strong> activity on the failure path, or an
+                            Activator alert on the pipeline.
+                        </p>
+                        <div class="callout pro"><span class="k">For data pros</span>Check the
+                            <strong>Monitoring hub</strong> for per-activity duration, rows read/written, and
+                            input/output — your equivalent of pipeline run logs + row counts for reconciliation.
+                        </div>
+                        <div class="callout note"><span class="k">Note</span>Governance carries over: pipeline
+                            items live in the workspace and honor workspace roles and OneLake security on the
+                            lakehouse tables they write.</div>
+                        <div class="callout verify"><span class="k">You did it 🎉</span>You automated
+                            ContosoMart's bronze: a cleansing Dataflow, an incremental Copy, an orchestrated
+                            DAG on a schedule, with retries and alerts — no more manual uploads.</div>
+                        <div class="callout pro"><span class="k">Next</span>Continue the tour with the
+                            <a href="../warehouse-tsql/index.html">Data Warehouse (T-SQL)</a> lab, or serve
+                            the results in <a href="../ecommerce-medallion/index.html">the medallion lab</a>.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="foot">
+        ContosoMart Data Factory Ingestion &middot; Grounded in Microsoft Learn (see <code>spec.md</code>).
+        Part of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:data-factory-ingestion";
+
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+
+        document.querySelectorAll("[data-tabs]").forEach(group => {
+            group.querySelectorAll(".tabbtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    group.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+                    group.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    group.querySelector(`[data-pane="${btn.dataset.tab}"]`).classList.add("active");
+                });
+            });
+        });
+
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+[
+    {
+        "event_id": "e-1001",
+        "ts": "2026-03-01T14:02:11Z",
+        "session": "s-77",
+        "customer_ref": "C-0007",
+        "page": "/product/espresso-blend",
+        "event_type": "page_view",
+        "device": "mobile",
+        "geo": "CA-ON",
+        "value_cad": 0
+    },
+    {
+        "event_id": "e-1002",
+        "ts": "2026-03-01T14:02:39Z",
+        "session": "s-77",
+        "customer_ref": "c-0007",
+        "page": "/product/espresso-blend",
+        "event_type": "add_to_cart",
+        "device": "mobile",
+        "geo": "CA-ON",
+        "value_cad": 18.5
+    },
+    {
+        "event_id": "e-1003",
+        "ts": "2026-03-01T14:05:02Z",
+        "session": "s-77",
+        "customer_ref": "C-0007",
+        "page": "/checkout",
+        "event_type": "purchase",
+        "device": "mobile",
+        "geo": "CA-ON",
+        "value_cad": 18.5
+    },
+    {
+        "event_id": "e-1004",
+        "ts": "2026-03-01T14:06:20Z",
+        "session": "s-91",
+        "customer_ref": "C-0031",
+        "page": "/product/cold-brew-kit",
+        "event_type": "page_view",
+        "device": "desktop",
+        "geo": "US-WA",
+        "value_cad": 0
+    },
+    {
+        "event_id": "e-1005",
+        "ts": "2026-03-01T14:07:44Z",
+        "session": "s-91",
+        "customer_ref": "C-0031",
+        "page": "/product/cold-brew-kit",
+        "event_type": "add_to_cart",
+        "device": "desktop",
+        "geo": "US-WA",
+        "value_cad": 42.0
+    },
+    {
+        "event_id": "e-1006",
+        "ts": "2026-03-01T14:09:10Z",
+        "session": "s-91",
+        "customer_ref": "C-0031",
+        "page": "/cart",
+        "event_type": "cart_abandon",
+        "device": "desktop",
+        "geo": "US-WA",
+        "value_cad": 42.0
+    },
+    {
+        "event_id": "e-1007",
+        "ts": "2026-03-01T14:12:05Z",
+        "session": "s-104",
+        "customer_ref": "C-0044",
+        "page": "/product/decaf-single-origin",
+        "event_type": "page_view",
+        "device": "tablet",
+        "geo": "GB-LND",
+        "value_cad": 0
+    },
+    {
+        "event_id": "e-1008",
+        "ts": "2026-03-01T14:12:48Z",
+        "session": "s-104",
+        "customer_ref": "C-0044",
+        "page": "/product/decaf-single-origin",
+        "event_type": "add_to_cart",
+        "device": "tablet",
+        "geo": "GB-LND",
+        "value_cad": 22.0
+    },
+    {
+        "event_id": "e-1009",
+        "ts": "2026-03-01T14:15:33Z",
+        "session": "s-104",
+        "customer_ref": "C-0044",
+        "page": "/checkout",
+        "event_type": "purchase",
+        "device": "tablet",
+        "geo": "GB-LND",
+        "value_cad": 22.0
+    },
+    {
+        "event_id": "e-1010",
+        "ts": "2026-03-01T14:18:59Z",
+        "session": "s-118",
+        "customer_ref": "C-0052",
+        "page": "/product/espresso-blend",
+        "event_type": "page_view",
+        "device": "mobile",
+        "geo": "CA-QC",
+        "value_cad": 0
+    },
+    {
+        "event_id": "e-1011",
+        "ts": "2026-03-01T14:20:41Z",
+        "session": "s-118",
+        "customer_ref": "C-0052",
+        "page": "/product/espresso-blend",
+        "event_type": "add_to_cart",
+        "device": "mobile",
+        "geo": "CA-QC",
+        "value_cad": 18.5
+    },
+    {
+        "event_id": "e-1012",
+        "ts": "2026-03-01T14:26:12Z",
+        "session": "s-118",
+        "customer_ref": "C-0052",
+        "page": "/cart",
+        "event_type": "cart_abandon",
+        "device": "mobile",
+        "geo": "CA-QC",
+        "value_cad": 18.5
+    },
+    {
+        "event_id": "e-1013",
+        "ts": "2026-03-01T14:31:07Z",
+        "session": "s-133",
+        "customer_ref": "C-0007",
+        "page": "/product/cold-brew-kit",
+        "event_type": "page_view",
+        "device": "desktop",
+        "geo": "CA-ON",
+        "value_cad": 0
+    },
+    {
+        "event_id": "e-1014",
+        "ts": "2026-03-01T14:33:55Z",
+        "session": "s-133",
+        "customer_ref": "C-0007",
+        "page": "/product/cold-brew-kit",
+        "event_type": "add_to_cart",
+        "device": "desktop",
+        "geo": "CA-ON",
+        "value_cad": 42.0
+    },
+    {
+        "event_id": "e-1015",
+        "ts": "2026-03-01T14:39:20Z",
+        "session": "s-133",
+        "customer_ref": "C-0007",
+        "page": "/checkout",
+        "event_type": "purchase",
+        "device": "desktop",
+        "geo": "CA-ON",
+        "value_cad": 42.0
+    }
+]

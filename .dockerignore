@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+infra
+templates
+azure.yaml
+Dockerfile
+.dockerignore
+AUTHORING.md
+SKILL.md
+STORY.md
+README.md

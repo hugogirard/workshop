@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContosoMart Real-Time Intelligence Lab — Microsoft Fabric</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            counter-reset: mod;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-cyan));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 70ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.stream {
+            background: var(--fab-blue);
+        }
+
+        .chip.query {
+            background: var(--fab-cyan);
+        }
+
+        .chip.act {
+            background: var(--fab-gold);
+            color: #2b2400;
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-teal);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 16px;
+        }
+
+        .module .srclinks a {
+            margin-right: 12px;
+        }
+
+        .learnmore {
+            background: var(--surface-soft);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin: 0 0 16px;
+        }
+
+        .learnmore .k {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            font-size: 11px;
+            color: var(--fab-cyan);
+            margin-right: 6px;
+        }
+
+        .learnmore a {
+            margin-right: 14px;
+            white-space: nowrap;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .tabs {
+            margin: 10px 0;
+        }
+
+        .tabs .tabbar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tabs .tabbtn {
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface-soft);
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tabs .tabbtn.active {
+            background: var(--code-bg);
+            color: #fff;
+            border-color: var(--code-bg);
+        }
+
+        .tabs .tabpane {
+            display: none;
+        }
+
+        .tabs .tabpane.active {
+            display: block;
+        }
+
+        .tabs .tabpane pre.code {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        /* ---- Estate strip + story bridge ---- */
+        .estate-band {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+            margin: 0 0 24px;
+        }
+
+        .estate {
+            width: 100%;
+            max-width: 660px;
+            height: auto;
+            display: block;
+            margin: 0 auto 4px;
+        }
+
+        .estate text {
+            font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+        }
+
+        .estate .track {
+            stroke: var(--border);
+            stroke-width: 2;
+        }
+
+        .estate .lake {
+            fill: rgba(39, 193, 166, .10);
+            stroke: var(--fab-accent);
+            stroke-dasharray: 4 3;
+        }
+
+        .estate .lake-t {
+            fill: var(--muted);
+            letter-spacing: .3px;
+        }
+
+        .estate .node {
+            fill: var(--surface);
+            stroke: var(--border);
+        }
+
+        .estate .node.on {
+            fill: var(--fab-accent);
+            stroke: var(--fab-accent);
+        }
+
+        .estate .nt {
+            fill: var(--muted);
+            font-weight: 700;
+        }
+
+        .estate .nl {
+            fill: var(--muted);
+        }
+
+        .estate .nl.on {
+            fill: var(--ink);
+            font-weight: 700;
+        }
+
+        .story-so-far {
+            margin: 8px 2px 0;
+            font-size: 13.5px;
+            color: var(--muted);
+            max-width: 96ch;
+        }
+
+        .story-so-far .wk {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--fab-cyan);
+            margin-right: 8px;
+        }
+
+        .story-so-far strong {
+            color: var(--ink);
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">ContosoMart Real-Time Intelligence<span class="sub">Microsoft Fabric hands-on lab</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <h1>ContosoMart Real-Time Intelligence</h1>
+                <p>The <a href="../ecommerce-medallion/index.html" style="color:#cfeffa">medallion lab</a>
+                    handled ContosoMart's <em>batch</em> data. This one handles <em>data in motion</em>:
+                    stream the storefront clickstream and cold-store IoT sensors into an Eventhouse, query
+                    it with KQL, watch a live dashboard, and fire Activator alerts — seconds from event to
+                    action.</p>
+                <div class="chips">
+                    <span class="chip">Hands-on lab</span>
+                    <span class="chip stream">Stream</span>
+                    <span class="chip query">Query (KQL)</span>
+                    <span class="chip act">Act</span>
+                </div>
+            </div>
+
+            <!-- ================= MODULE 0 ================= -->
+            <div class="estate-band">
+                <svg class="estate" viewBox="0 0 660 96" role="img"
+                    aria-label="ContosoMart Fabric estate map — seven workloads over one OneLake; the highlighted node is this lab.">
+                    <line class="track" x1="44" y1="26" x2="616" y2="26"></line>
+                    <circle class="node" cx="44" cy="26" r="15"></circle><text class="nt" x="44" y="30"
+                        text-anchor="middle" font-size="12">1</text><text class="nl" x="44" y="50" text-anchor="middle"
+                        font-size="9.5">Lakehouse</text>
+                    <circle class="node on" cx="139" cy="26" r="15"></circle><text class="nt" x="139" y="30"
+                        text-anchor="middle" font-size="12" fill="#03261f">2</text><text class="nl on" x="139" y="50"
+                        text-anchor="middle" font-size="9.5">Real-Time</text>
+                    <circle class="node" cx="235" cy="26" r="15"></circle><text class="nt" x="235" y="30"
+                        text-anchor="middle" font-size="12">3</text><text class="nl" x="235" y="50" text-anchor="middle"
+                        font-size="9.5">Ingest</text>
+                    <circle class="node" cx="330" cy="26" r="15"></circle><text class="nt" x="330" y="30"
+                        text-anchor="middle" font-size="12">4</text><text class="nl" x="330" y="50" text-anchor="middle"
+                        font-size="9.5">Warehouse</text>
+                    <circle class="node" cx="425" cy="26" r="15"></circle><text class="nt" x="425" y="30"
+                        text-anchor="middle" font-size="12">5</text><text class="nl" x="425" y="50" text-anchor="middle"
+                        font-size="9.5">Zero-copy</text>
+                    <circle class="node" cx="521" cy="26" r="15"></circle><text class="nt" x="521" y="30"
+                        text-anchor="middle" font-size="12">6</text><text class="nl" x="521" y="50" text-anchor="middle"
+                        font-size="9.5">ML</text>
+                    <circle class="node" cx="616" cy="26" r="15"></circle><text class="nt" x="616" y="30"
+                        text-anchor="middle" font-size="12">7</text><text class="nl" x="616" y="50" text-anchor="middle"
+                        font-size="9.5">Govern</text>
+                    <rect class="lake" x="8" y="60" width="644" height="24" rx="8"></rect>
+                    <text class="lake-t" x="330" y="76" text-anchor="middle" font-size="10">OneLake — one open copy,
+                        every engine</text>
+                </svg>
+                <p class="story-so-far"><span class="wk">Act 2 · Peak season</span> <strong>Story so far:</strong>
+                    the batch medallion from <a href="../ecommerce-medallion/index.html">Lab 1</a> tells you what
+                    happened <em>yesterday</em> — but a promo is live now and a cold-store fridge is warming up.
+                    <strong>Your mission:</strong> stream events into an Eventhouse, watch them live, and alert on
+                    trouble.
+                </p>
+            </div>
+
+            <section class="module" id="m0" data-title="Setup">
+                <h2><span class="badge">Module 0</span> Set up &amp; understand real-time</h2>
+                <p class="lead">Real-Time Intelligence is Fabric's stack for data <em>in motion</em> — it
+                    reacts to events <em>as they happen</em> instead of on a schedule. Before touching it,
+                    it helps to know why it exists and how it differs from the nightly medallion batch you
+                    already built.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/overview" target="_blank"
+                        rel="noopener">Real-Time Intelligence overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
+                        rel="noopener">Fabric trial</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/overview" target="_blank"
+                        rel="noopener">What is RTI</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-hub/real-time-hub-overview"
+                        target="_blank" rel="noopener">Real-Time hub</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
+                        rel="noopener">Trial capacity</a>
+                </div>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Why real-time? Batch vs streaming</span>
+                        <span class="est">~5 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> ContosoMart's medallion lakehouse answers
+                            "what happened <em>yesterday</em>?" Real-Time Intelligence answers "what is
+                            happening <em>right now</em>?" — a cart being abandoned this minute, a
+                            cold-store fridge warming up before the stock spoils. RTI ingests, stores,
+                            queries, visualizes and <em>acts</em> on streaming events end-to-end.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>Think of the
+                            Eventhouse as a specialized, append-only log warehouse and KQL as
+                            "SQL tuned for time-series &amp; logs" — closer to Splunk/ADX than to your OLTP
+                            database. Batch medallion = nightly ETL; RTI = an always-on trigger on the firehose.</div>
+                        <div class="callout note"><span class="k">Note</span>RTI doesn't require
+                            high volumes — "real-time" just means event-driven rather than scheduled. Even
+                            a trickle of events works.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>You can state, in
+                            one sentence, the difference between the batch medallion lab and this one.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m0-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Reuse the ContosoMart workspace</span>
+                        <span class="est">~5 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> We keep the whole saga in one workspace so the
+                            real-time events can later join the medallion gold tables. If you did the
+                            medallion lab, reuse <code>ContosoMart-Analytics</code>; otherwise start the
+                            trial and create it.</p>
+                        <p>Start the trial from <strong>Account manager → Start trial</strong>, then create
+                            the workspace and set it to the Trial capacity.</p>
+                        <div class="callout note"><span class="k">Note</span>The trial runs 60 days as an
+                            <strong>F4 or F64</strong> capacity; Copilot/AI isn't included, and this lab
+                            avoids Copilot-dependent steps.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>You're in the
+                            <code>ContosoMart-Analytics</code> workspace on Trial capacity.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 1 ================= -->
+            <section class="module" id="m1" data-title="Eventhouse & KQL DB">
+                <h2><span class="badge">Module 1</span> Create the Eventhouse &amp; KQL database</h2>
+                <p class="lead">An <strong>Eventhouse</strong> is the storage + analytics engine for
+                    events. It auto-organizes data by arrival time so you can run fast time-series queries
+                    over huge volumes — it's the "lake in motion" that everything else in this lab feeds and
+                    reads.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/eventhouse" target="_blank"
+                        rel="noopener">Eventhouse overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/create-database"
+                        target="_blank" rel="noopener">Create a KQL database</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/eventhouse" target="_blank"
+                        rel="noopener">Eventhouse concept</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/create-database"
+                        target="_blank" rel="noopener">KQL database</a>
+                    <a href="https://learn.microsoft.com/en-us/kusto/query/" target="_blank" rel="noopener">KQL
+                        language</a>
+                </div>
+
+                <details class="step" data-step="m1-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Create Eventhouse <code>eh_contoso_rti</code></span>
+                        <span class="est">~5 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Creating the Eventhouse gives you a KQL database
+                            of the same name automatically — that database holds the tables your streams
+                            land in.</p>
+                        <p>In the workspace: <strong>+ New item → Eventhouse</strong>, name it
+                            <code>eh_contoso_rti</code>. Open it and note the child <strong>KQL database</strong>.
+                        </p>
+                        <div class="callout pro"><span class="k">For data pros</span>The Eventhouse is the
+                            server; the KQL database is the database; KQL tables are your tables. Familiar
+                            shape — new engine tuned for append-only, time-partitioned data.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>An Eventhouse
+                            <code>eh_contoso_rti</code> with an empty KQL database appears in the workspace.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m1-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Create the target KQL table</span>
+                        <span class="est">~8 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> The stream needs a typed landing table. Run this
+                            in the KQL database <strong>Explore your data</strong> query editor to create the
+                            raw clickstream table (our "bronze in motion").</p>
+                        <pre class="code"><button class="copy">Copy</button><code>.create table Clickstream (
+    event_id: string, ts: datetime, session: string,
+    customer_ref: string, page: string, event_type: string,
+    device: string, geo: string, value_cad: real
+)</code></pre>
+                        <p>Also create the sensor table for Module 3/5:</p>
+                        <pre class="code"><button class="copy">Copy</button><code>.create table Sensors (
+    sensor_id: string, ts: datetime, warehouse: string,
+    zone: string, temp_c: real, humidity_pct: int, door_open: bool
+)</code></pre>
+                        <div class="callout note"><span class="k">Note</span>KQL control commands start with a
+                            dot (<code>.create</code>). Keep column names matching the sample files exactly so
+                            ingestion maps cleanly.</div>
+                        <div class="callout verify"><span class="k">Expected result</span><code>.show tables</code>
+                            lists <code>Clickstream</code> and <code>Sensors</code>.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 2 ================= -->
+            <section class="module" id="m2" data-title="Ingest → Eventstream">
+                <h2><span class="badge">Module 2</span> Stream events in (bronze in motion)</h2>
+                <p class="lead">An <strong>Eventstream</strong> collects, transforms and routes streaming
+                    data to destinations with <em>no code</em>. The <strong>Real-Time hub</strong> is the
+                    org-wide catalog of every stream. Here we land the storefront clickstream into the KQL
+                    table you just made.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/overview"
+                        target="_blank" rel="noopener">Eventstreams overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-hub/real-time-hub-overview"
+                        target="_blank" rel="noopener">Real-Time hub</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/overview"
+                        target="_blank" rel="noopener">Eventstreams</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-hub/real-time-hub-overview"
+                        target="_blank" rel="noopener">Real-Time hub</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/get-data-onelake"
+                        target="_blank" rel="noopener">Get data into a KQL DB</a>
+                </div>
+
+                <details class="step" data-step="m2-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Create Eventstream <code>es_clickstream</code></span>
+                        <span class="est">~8 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> The Eventstream is the no-code ingest pipe. In
+                            the trial (no external Event Hub), use the built-in <strong>Sample data</strong>
+                            source to prove the flow end-to-end, then swap in a real source later.</p>
+                        <p><strong>+ New item → Eventstream</strong> → name <code>es_clickstream</code>.
+                            Add source <strong>Sample data</strong> (e.g. a retail/clickstream sample), add a
+                            destination <strong>Eventhouse / KQL Database</strong> → <code>eh_contoso_rti</code>
+                            → table <code>Clickstream</code>. Publish.</p>
+                        <div class="callout pro"><span class="k">For data pros</span>This is your
+                            ingest/CDC layer. In production the source is an Azure Event Hub, IoT Hub, Kafka
+                            topic, or a database CDC feed — all no-code connectors in the same designer.</div>
+                        <div class="callout note"><span class="k">Note</span>The trial can't provision an
+                            external Event Hub without an Azure subscription; the built-in sample source
+                            keeps this hands-on with zero external setup.</div>
+                        <div class="callout verify"><span class="k">Expected result</span>The Eventstream
+                            shows a live green data-preview flowing from source to the KQL destination.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m2-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Load our sample clickstream + sensors</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> To query <em>our</em> ContosoMart data (matching
+                            the CRM refs), also one-shot load the two sample files with
+                            <strong>Get data → Local file</strong> in the KQL database — a fast alternative
+                            to a live source for the exercises below.
+                        </p>
+                        <p>Upload <code>data/clickstream-events.json</code> → existing table
+                            <code>Clickstream</code> (JSON mapping), and
+                            <code>data/warehouse-sensors.csv</code> → <code>Sensors</code> (CSV, skip header).
+                        </p>
+                        <div class="callout note"><span class="k">Alternative: ingest inline</span>You can also
+                            push a couple of rows directly with a KQL command:</div>
+                        <pre class="code"><button class="copy">Copy</button><code>.ingest inline into table Sensors &lt;|
+SENS-01,2026-03-01T14:10:00Z,YYZ-1,cold-store,6.8,64,true
+SENS-01,2026-03-01T14:15:00Z,YYZ-1,cold-store,8.5,67,true</code></pre>
+                        <div class="callout verify"><span class="k">Expected
+                                result</span><code>Clickstream | count</code>
+                            returns 15 (plus any live sample rows); <code>Sensors | count</code> returns 10+.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 3 ================= -->
+            <section class="module" id="m3" data-title="Shape & query (KQL)">
+                <h2><span class="badge">Module 3</span> Shape &amp; query with KQL (silver in motion)</h2>
+                <p class="lead">KQL turns raw events into insight. Here you normalize the messy
+                    <code>customer_ref</code>, compute the checkout funnel, measure a 5-minute cart-abandon
+                    rate, and detect the cold-store temperature excursion — the streaming equivalent of the
+                    medallion "silver" cleanse.
+                </p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/kusto/query/" target="_blank" rel="noopener">KQL
+                        overview</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/eventhouse" target="_blank"
+                        rel="noopener">Eventhouse</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/kusto/query/" target="_blank" rel="noopener">KQL
+                        reference</a>
+                    <a href="https://learn.microsoft.com/en-us/kusto/query/summarize-operator" target="_blank"
+                        rel="noopener">summarize</a>
+                    <a href="https://learn.microsoft.com/en-us/kusto/query/bin-function" target="_blank"
+                        rel="noopener">bin() windows</a>
+                </div>
+
+                <details class="step" data-step="m3-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Normalize &amp; explore the funnel</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> The web app emits mixed-case customer refs
+                            (<code>C-0007</code> / <code>c-0007</code>). Standardize them so events join the
+                            CRM cleanly, then count each funnel stage.</p>
+                        <div class="tabs" data-tabs>
+                            <div class="tabbar">
+                                <button class="tabbtn active" data-tab="kql">KQL</button>
+                                <button class="tabbtn" data-tab="sql">T-SQL equiv</button>
+                            </div>
+                            <div class="tabpane active" data-pane="kql">
+                                <pre class="code"><button class="copy">Copy</button><code>Clickstream
+| extend customer_ref = toupper(customer_ref)
+| summarize events = count() by event_type
+| order by events desc</code></pre>
+                            </div>
+                            <div class="tabpane" data-pane="sql">
+                                <pre class="code"><button class="copy">Copy</button><code>-- KQL DBs also accept T-SQL for simple queries:
+SELECT event_type, COUNT(*) AS events
+FROM Clickstream
+GROUP BY event_type
+ORDER BY events DESC;</code></pre>
+                            </div>
+                        </div>
+                        <div class="callout pro"><span class="k">For data pros</span><code>summarize ... by</code>
+                            is <code>GROUP BY</code>; <code>extend</code> is a computed column; the pipe
+                            <code>|</code> chains operators left-to-right instead of nesting.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Counts for
+                            <code>page_view</code>, <code>add_to_cart</code>, <code>purchase</code>,
+                            <code>cart_abandon</code>.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m3-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Windowed cart-abandon rate</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> A single abandon is noise; a <em>spike</em> is a
+                            signal. Bin events into 5-minute windows and compute the abandon rate — this is
+                            the metric Activator will watch in Module 5.</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Clickstream
+| where event_type in ("add_to_cart", "cart_abandon", "purchase")
+| summarize
+    added   = countif(event_type == "add_to_cart"),
+    abandon = countif(event_type == "cart_abandon")
+    by bin(ts, 5m)
+| extend abandon_rate = todouble(abandon) / iff(added == 0, 1, added)
+| order by ts asc</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span><code>bin(ts, 5m)</code>
+                            is a time-bucket (like <code>DATE_TRUNC</code> to a 5-min grid);
+                            <code>countif</code> is a conditional aggregate.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>One row per 5-min
+                            window with an <code>abandon_rate</code> column between 0 and 1.</div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m3-s3">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Detect the cold-store excursion</span>
+                        <span class="est">~8 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Cold-store stock spoils above ~6 °C. Find sensor
+                            readings that breach the threshold so we can alert before inventory is lost.</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Sensors
+| where zone == "cold-store" and temp_c &gt; 6.0
+| project ts, sensor_id, warehouse, temp_c, door_open
+| order by ts asc</code></pre>
+                        <div class="callout note"><span class="k">Note</span><code>SENS-01</code> in
+                            <code>YYZ-1</code> breaches after a <code>door_open</code> — a realistic
+                            root-cause you can show on the dashboard.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Two rows for
+                            <code>SENS-01</code> at 6.8 °C and 8.5 °C.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 4 ================= -->
+            <section class="module" id="m4" data-title="Real-Time dashboard">
+                <h2><span class="badge">Module 4</span> Build a Real-Time dashboard (gold in motion)</h2>
+                <p class="lead">A <strong>Real-Time dashboard</strong> pins KQL queries as auto-refreshing
+                    tiles — seconds from ingest to insight, for anyone, no notebook required. This is the
+                    "serve &amp; visualize" layer for streaming data.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/dashboard-real-time-create"
+                        target="_blank" rel="noopener">Create a Real-Time dashboard</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/dashboard-real-time-create"
+                        target="_blank" rel="noopener">Real-Time dashboards</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/dashboard-parameters"
+                        target="_blank" rel="noopener">Dashboard parameters</a>
+                </div>
+
+                <details class="step" data-step="m4-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Pin tiles for purchases, abandon rate &amp; temperature</span>
+                        <span class="est">~15 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Three tiles tell the ops story at a glance:
+                            revenue flowing in, carts being lost, and a fridge warming up. Create a
+                            <strong>Real-Time Dashboard</strong>, add a data source (the KQL database), then
+                            add tiles from these queries.
+                        </p>
+                        <p>Tile 1 — purchases per minute (stat / line):</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Clickstream
+| where event_type == "purchase"
+| summarize revenue_cad = sum(value_cad), orders = count() by bin(ts, 1m)
+| order by ts asc</code></pre>
+                        <p>Tile 2 — 5-min abandon rate (line): reuse the Module 3 abandon-rate query.</p>
+                        <p>Tile 3 — cold-store temperature (line, one series per sensor):</p>
+                        <pre class="code"><button class="copy">Copy</button><code>Sensors
+| where zone == "cold-store"
+| project ts, sensor_id, temp_c
+| render timechart</code></pre>
+                        <div class="callout note"><span class="k">Note</span>Set the dashboard
+                            <strong>auto-refresh</strong> (e.g. every 30 s) and a time range so tiles update
+                            as new events land.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>A saved dashboard
+                            with three live tiles; the temperature tile visibly spikes for
+                            <code>SENS-01</code>.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 5 ================= -->
+            <section class="module" id="m5" data-title="Act with Activator">
+                <h2><span class="badge">Module 5</span> Act on events with Activator</h2>
+                <p class="lead"><strong>Activator</strong> turns insight into action: it watches a stream,
+                    KQL query, or dashboard tile and, when a condition holds, sends an alert or kicks off a
+                    Fabric job / Power Automate flow. This is what makes real-time <em>actionable</em>, not
+                    just observable.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/data-activator/activator-introduction"
+                        target="_blank" rel="noopener">What is Activator</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/data-activator/activator-introduction"
+                        target="_blank" rel="noopener">Activator intro</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/data-activator/activator-create-activators"
+                        target="_blank" rel="noopener">Create rules</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/data-activator/activator-get-data-real-time-dashboard"
+                        target="_blank" rel="noopener">Alert from a tile</a>
+                </div>
+
+                <details class="step" data-step="m5-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Alert on a cold-store temperature breach</span>
+                        <span class="est">~12 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> A warming fridge is money spoiling. Create an
+                            Activator rule so operations gets pinged the moment temperature crosses the line
+                            — before the stock is lost.</p>
+                        <p>From the cold-store temperature tile: <strong>… → Set alert</strong>. Condition:
+                            <code>temp_c</code> is <strong>greater than 6</strong>, grouped by
+                            <code>sensor_id</code>, sustained for <strong>10 min</strong>. Action: email /
+                            Teams to the ops channel.
+                        </p>
+                        <div class="callout pro"><span class="k">For data pros</span>This is a database
+                            trigger for the physical world — declarative condition → action, but over a live
+                            event feed instead of table DML.</div>
+                        <div class="callout note"><span class="k">Note</span>Trial email/Teams actions work;
+                            Power Automate actions may need extra licensing. Grouping by
+                            <code>sensor_id</code> avoids one noisy sensor masking another.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>The rule shows
+                            <strong>Active</strong>; a test alert fires for <code>SENS-01</code>.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m5-s2">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Alert on a cart-abandonment spike</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> A sudden jump in the abandon rate can mean a
+                            broken checkout or a pricing glitch — worth an instant heads-up to the growth
+                            team.</p>
+                        <p>Create an Activator from the abandon-rate query: condition
+                            <code>abandon_rate</code> <strong>&gt; 0.5</strong> over a 5-min window; action:
+                            notify the growth channel.
+                        </p>
+                        <div class="callout verify"><span class="k">Expected result</span>A second Active
+                            rule; triggering history shows it evaluated your windows.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= MODULE 6 ================= -->
+            <section class="module" id="m6" data-title="OneLake & govern">
+                <h2><span class="badge">Module 6</span> Connect to OneLake &amp; govern</h2>
+                <p class="lead">Turning on <strong>OneLake availability</strong> mirrors your KQL tables to
+                    OneLake as one logical Delta copy — so the <em>same</em> events are readable by Spark,
+                    T-SQL and Power BI Direct Lake, and can join the medallion gold tables. One copy, every
+                    engine.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/one-logical-copy"
+                        target="_blank" rel="noopener">OneLake availability (one logical copy)</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/direct-lake-overview" target="_blank"
+                        rel="noopener">Direct Lake</a>
+                </p>
+                <div class="learnmore"><span class="k">Learn more</span>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/one-logical-copy"
+                        target="_blank" rel="noopener">One logical copy</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/direct-lake-overview" target="_blank"
+                        rel="noopener">Direct Lake</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/overview" target="_blank"
+                        rel="noopener">RTI overview</a>
+                </div>
+
+                <details class="step" data-step="m6-s1">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Enable OneLake availability &amp; join to gold</span>
+                        <span class="est">~10 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Real-time and batch shouldn't be silos. Exposing
+                            the events in OneLake lets you enrich them with the medallion CRM/gold —
+                            e.g. attach customer lifetime value to a live abandoning cart.</p>
+                        <p>In the KQL database <strong>table policy → OneLake availability</strong>, turn it
+                            <strong>On</strong> for <code>Clickstream</code>. Then, from the lakehouse SQL
+                            analytics endpoint, join to the gold customer table from the medallion lab:
+                        </p>
+                        <pre class="code"><button class="copy">Copy</button><code>-- Enrich a live abandoning cart with batch CLV (conceptual join)
+SELECT c.customer_ref, c.value_cad, g.lifetime_value_usd
+FROM Clickstream AS c
+JOIN gold.customer_ltv AS g
+  ON UPPER(c.customer_ref) = g.customer_id
+WHERE c.event_type = 'cart_abandon';</code></pre>
+                        <div class="callout pro"><span class="k">For data pros</span>This is the "one copy,
+                            multi-engine" promise: KQL wrote it, T-SQL reads it, Power BI Direct Lake serves
+                            it — no export, no duplicate pipeline.</div>
+                        <div class="callout note"><span class="k">Note</span>OneLake availability adds a Delta
+                            copy in OneLake; the KQL engine still owns the hot path. Governance (workspace
+                            roles, sensitivity labels) applies just like the medallion lab.</div>
+                        <div class="callout verify"><span class="k">You did it 🎉</span>You streamed live
+                            events into an Eventhouse, shaped them with KQL, built a live dashboard, fired
+                            Activator alerts, and exposed the data to OneLake — the full real-time loop,
+                            wired into the ContosoMart saga.</div>
+                        <div class="callout pro"><span class="k">Next</span>Continue the tour with
+                            <a href="../data-factory-ingestion/index.html">Data Factory ingestion</a> to
+                            automate the batch loads, or revisit
+                            <a href="../ecommerce-medallion/index.html">the medallion lab</a>.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="foot">
+        ContosoMart Real-Time Intelligence &middot; Grounded in Microsoft Learn (see <code>spec.md</code>).
+        Part of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:realtime-intelligence";
+
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+
+        document.querySelectorAll("[data-tabs]").forEach(group => {
+            group.querySelectorAll(".tabbtn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    group.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+                    group.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    group.querySelector(`[data-pane="${btn.dataset.tab}"]`).classList.add("active");
+                });
+            });
+        });
+
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

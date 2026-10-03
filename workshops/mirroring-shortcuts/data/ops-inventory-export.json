@@ -1,0 +1,34 @@
+[
+    {
+        "sku": "ESP-001",
+        "warehouse": "YYZ-1",
+        "on_hand": 420,
+        "reserved": 60,
+        "reorder_point": 150,
+        "updated_at": "2026-03-02T09:15:00Z"
+    },
+    {
+        "sku": "CLD-010",
+        "warehouse": "YYZ-1",
+        "on_hand": 85,
+        "reserved": 20,
+        "reorder_point": 100,
+        "updated_at": "2026-03-02T09:15:00Z"
+    },
+    {
+        "sku": "DEC-004",
+        "warehouse": "SEA-2",
+        "on_hand": 210,
+        "reserved": 15,
+        "reorder_point": 120,
+        "updated_at": "2026-03-02T09:15:00Z"
+    },
+    {
+        "sku": "MUG-100",
+        "warehouse": "SEA-2",
+        "on_hand": 640,
+        "reserved": 40,
+        "reorder_point": 200,
+        "updated_at": "2026-03-02T09:15:00Z"
+    }
+]

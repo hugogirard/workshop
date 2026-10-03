@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ground it in knowledge — Foundry IQ (ContosoMart)</title>
+    <script>
+        (() => {
+            const saved = localStorage.getItem("fabws-theme");
+            const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        :root {
+            --fab-navy: #10314B;
+            --fab-teal: #117865;
+            --fab-cyan: #0E7C86;
+            --fab-blue: #1E6FB0;
+            --fab-bronze: #B87333;
+            --fab-silver: #8A97A0;
+            --fab-gold: #C9A227;
+            --fab-accent: #27C1A6;
+            --fab-foundry: #8A5CF6;
+            --bg: #F3F7FA;
+            --surface: #FFFFFF;
+            --surface-soft: #EAF1F6;
+            --border: #D8E1E8;
+            --ink: #1F2A33;
+            --muted: #5A6B78;
+            --code-bg: #0B1F2E;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(11, 31, 46, .10);
+            --radius: 14px;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0C1A24;
+            --surface: #12242F;
+            --surface-soft: #173241;
+            --border: #244251;
+            --ink: #E7F0F5;
+            --muted: #9FB3BF;
+            --code-bg: #081019;
+            --code-ink: #E6F1F7;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--fab-blue);
+        }
+
+        html[data-theme="dark"] a {
+            color: #78c1ee;
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", Courier, monospace;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--fab-navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        header.topbar .brand {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: .3px;
+        }
+
+        header.topbar .brand .sub {
+            font-weight: 400;
+            opacity: .8;
+            font-size: 12px;
+            display: block;
+        }
+
+        header.topbar .spacer {
+            flex: 1;
+        }
+
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fab-accent);
+            transition: width .25s ease;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            opacity: .95;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        nav.side {
+            position: sticky;
+            top: 56px;
+            align-self: start;
+            height: calc(100vh - 56px);
+            overflow: auto;
+            padding: 20px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        nav.side ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav.side a {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        nav.side a .num {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        nav.side a:hover {
+            background: var(--surface-soft);
+            color: var(--ink);
+        }
+
+        nav.side a.active {
+            background: var(--surface-soft);
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        nav.side a.active .num {
+            background: var(--fab-accent);
+            color: #03261f;
+        }
+
+        main {
+            padding: 28px 34px 80px;
+            min-width: 0;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--fab-navy), var(--fab-foundry));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero .kicker {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            opacity: .85;
+            margin-bottom: 6px;
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: .92;
+            max-width: 72ch;
+        }
+
+        .hero .chips {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .chip.foundry {
+            background: var(--fab-foundry);
+        }
+
+        .recap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 0 0 22px;
+        }
+
+        @media (max-width:720px) {
+            .recap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .recap .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+        }
+
+        .recap .panel h3 {
+            margin: 0 0 6px;
+            font-size: 15px;
+        }
+
+        .recap .panel p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .recap .panel.tension {
+            border-left: 4px solid var(--fab-foundry);
+        }
+
+        section.module {
+            margin-bottom: 34px;
+            scroll-margin-top: 70px;
+        }
+
+        .module>h2 {
+            font-size: 20px;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module>h2 .badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            background: var(--fab-foundry);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        .module .lead {
+            color: var(--muted);
+            margin: 0 0 14px;
+        }
+
+        .module .srclinks {
+            font-size: 12.5px;
+            margin: 0 0 16px;
+        }
+
+        .module .srclinks a {
+            margin-right: 12px;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .step>summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+        }
+
+        .step>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .step .chevron {
+            transition: transform .2s;
+            color: var(--muted);
+        }
+
+        .step[open] .chevron {
+            transform: rotate(90deg);
+        }
+
+        .step .check {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        .step .check.checked {
+            background: var(--fab-teal);
+            border-color: var(--fab-teal);
+            color: #fff;
+        }
+
+        .step .title {
+            flex: 1;
+        }
+
+        .step .est {
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--surface-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .step .body {
+            padding: 0 16px 16px 50px;
+        }
+
+        .step .body p {
+            margin: 8px 0;
+        }
+
+        .step .body ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+
+        .step .body li {
+            margin: 4px 0;
+        }
+
+        pre.code {
+            position: relative;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            border-radius: 10px;
+            padding: 14px 14px;
+            overflow: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        pre.code .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        pre.code .copy:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        table.tbl {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        table.tbl th,
+        table.tbl td {
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.tbl th {
+            background: var(--surface-soft);
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .callout .k {
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .callout.verify {
+            background: rgba(39, 193, 166, .10);
+            border-color: var(--fab-teal);
+        }
+
+        .callout.verify .k {
+            color: var(--fab-teal);
+        }
+
+        .callout.pro {
+            background: rgba(17, 120, 101, .10);
+            border-color: var(--fab-cyan);
+        }
+
+        .callout.pro .k {
+            color: var(--fab-cyan);
+        }
+
+        .callout.note {
+            background: rgba(201, 162, 39, .12);
+            border-color: var(--fab-gold);
+        }
+
+        .callout.note .k {
+            color: var(--fab-bronze);
+        }
+
+        .bridge {
+            background: linear-gradient(140deg, var(--fab-foundry), var(--fab-navy));
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .bridge h3 {
+            margin: 0 0 6px;
+        }
+
+        .bridge p {
+            margin: 0;
+            opacity: .93;
+        }
+
+        .bridge a {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        footer.foot {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 34px 40px;
+            color: var(--muted);
+            font-size: 12.5px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ---- Collapsible sidebar (desktop icon rail) ---- */
+        .btn.navtoggle {
+            font-size: 16px;
+            line-height: 1;
+            padding: 6px 11px;
+        }
+
+        .nav-backdrop {
+            display: none;
+        }
+
+        .layout.nav-collapsed {
+            grid-template-columns: 64px 1fr;
+        }
+
+        .nav-collapsed nav.side {
+            padding: 20px 8px;
+        }
+
+        .nav-collapsed nav.side a {
+            justify-content: center;
+            gap: 0;
+            padding: 8px 0;
+        }
+
+        .nav-collapsed nav.side .lbl {
+            display: none;
+        }
+
+        @media (max-width:860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            nav.side {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                z-index: 30;
+                width: 262px;
+                max-width: 80vw;
+                height: calc(100vh - 56px);
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                transform: translateX(-102%);
+                transition: transform .22s ease;
+                box-shadow: var(--shadow);
+                padding: 20px 14px;
+            }
+
+            .layout.nav-open nav.side {
+                transform: translateX(0);
+            }
+
+            .nav-collapsed nav.side a {
+                justify-content: flex-start;
+                gap: 10px;
+                padding: 8px 10px;
+            }
+
+            .nav-collapsed nav.side .lbl {
+                display: inline;
+            }
+
+            .nav-backdrop {
+                position: fixed;
+                inset: 56px 0 0 0;
+                background: rgba(4, 14, 22, .45);
+                z-index: 25;
+            }
+
+            .layout.nav-open .nav-backdrop {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <button class="btn navtoggle" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"
+            aria-expanded="false" aria-controls="sideNav">&#9776;</button>
+        <div class="brand">Foundry IQ knowledge<span class="sub">ContosoMart · Part 2 · Act 11</span></div>
+        <div class="spacer"></div>
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+        <button class="btn" id="resetBtn" title="Reset progress">Reset</button>
+        <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+    </header>
+
+    <div class="layout">
+        <div class="nav-backdrop" id="navBackdrop"></div>
+        <nav class="side" id="sideNav">
+            <ol id="navList"></ol>
+        </nav>
+        <main id="main">
+            <div class="hero">
+                <div class="kicker">Part 2 · Azure AI Foundry — Act 11</div>
+                <h1>Ground it in knowledge — Foundry IQ</h1>
+                <p>The concierge now answers with real numbers (Act 10) — but "what's our returns policy?" isn't in any
+                    table. Here you add a <strong>Foundry IQ</strong> knowledge base: agentic retrieval over ContosoMart
+                    documents on Azure AI Search, so the agent answers from policies, contracts and runbooks with
+                    <strong>citations</strong> — next to the Fabric numbers.
+                </p>
+                <div class="chips">
+                    <span class="chip foundry">Foundry IQ · agentic retrieval</span>
+                    <span class="chip">Azure AI Search</span>
+                    <span class="chip">Cited answers</span>
+                </div>
+            </div>
+
+            <div class="recap">
+                <div class="panel">
+                    <h3>Where the story is</h3>
+                    <p>The concierge grounds numeric questions in OneLake via the Fabric tool. Numbers are covered.</p>
+                </div>
+                <div class="panel tension">
+                    <h3>What still hurts</h3>
+                    <p>Document questions — returns policy, the Yirgacheffe supplier contract, the cold-store runbook —
+                        live in files, not tables. The data agent can't read them.</p>
+                </div>
+            </div>
+
+            <!-- Module 0 -->
+
+            <section class="module" id="m0" data-title="Why Foundry IQ">
+                <h2><span class="badge">Module 0</span> What Foundry IQ is</h2>
+                <p class="lead">Foundry IQ is agentic retrieval over a knowledge base — it grounds an agent's answers in
+                    your curated content and returns source citations.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/what-is-foundry-iq"
+                        target="_blank" rel="noopener">What is Foundry IQ</a>
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-iq-faq"
+                        target="_blank" rel="noopener">FAQ</a>
+                </p>
+
+                <details class="step" data-step="m0-s1" open>
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Knowledge base, knowledge source,
+                            retrieval</span><span class="est">~5 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> learn the three building blocks before you build.</p>
+                        <ul>
+                            <li><strong>Knowledge source</strong> — where content comes from (e.g. a Blob/ADLS Gen2
+                                container of documents).</li>
+                            <li><strong>Knowledge base</strong> — the retrievable index in Azure AI Search built over
+                                one or more sources.</li>
+                            <li><strong>Agentic retrieval</strong> — the agent plans and runs retrieval to ground its
+                                answer, with citations.</li>
+                        </ul>
+                        <div class="callout pro"><span class="k">Reusable</span>Knowledge bases can be called from
+                            Foundry Agent
+                            Service, Microsoft Agent Framework, or any app that uses the Azure AI Search knowledge base
+                            APIs.</div>
+                        <div class="callout note"><span class="k">Status</span>Foundry IQ is partial GA — API-level GA,
+                            portal access remains preview.</div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 1 -->
+            <section class="module" id="m1" data-title="Prepare the docs">
+                <h2><span class="badge">Module 1</span> Prepare the ContosoMart documents</h2>
+                <p class="lead">Foundry IQ retrieves from unstructured content. Land the three sample docs where a
+                    knowledge
+                    source can read them.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/search/agentic-knowledge-source-how-to-blob"
+                        target="_blank" rel="noopener">Blob knowledge source</a>
+                </p>
+
+                <details class="step" data-step="m1-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Upload the docs to Blob/ADLS</span><span
+                            class="est">~6 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> give the knowledge source something to index.</p>
+                        <p>Create (or reuse) an Azure Storage account and a container <code>contosomart-docs</code>, and
+                            upload
+                            the three files from this lab's <code>data/</code> folder:</p>
+                        <ul>
+                            <li><code>returns-policy.md</code> — the returns &amp; refund policy.</li>
+                            <li><code>supplier-contract.md</code> — the Highland Roastery agreement (covers
+                                Yirgacheffe).</li>
+                            <li><code>ops-runbook.md</code> — the cold-store operations runbook.</li>
+                        </ul>
+                        <div class="callout note"><span class="k">Why documents</span>These are exactly the questions
+                            the Fabric
+                            data agent <em>can't</em> answer — it doesn't support .pdf/.docx/.txt/unstructured content.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>Three documents sit in
+                            <code>contosomart-docs</code>, ready to index.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 2 -->
+            <section class="module" id="m2" data-title="Create a knowledge base">
+                <h2><span class="badge">Module 2</span> Create the knowledge base</h2>
+                <p class="lead">Build a blob knowledge source, then a knowledge base over it in Azure AI Search.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-how-to-create-knowledge-base"
+                        target="_blank" rel="noopener">Create a knowledge base</a>
+                    <a href="https://learn.microsoft.com/en-us/azure/search/agentic-knowledge-source-how-to-blob"
+                        target="_blank" rel="noopener">Blob knowledge source</a>
+                </p>
+
+                <details class="step" data-step="m2-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Build source + knowledge base</span><span
+                            class="est">~12 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> turn the documents into a retrievable knowledge base.</p>
+                        <ul>
+                            <li>Create a <strong>blob knowledge source</strong> pointing at
+                                <code>contosomart-docs</code>.
+                            </li>
+                            <li>Create a <strong>knowledge base</strong> named <code>contosomart-knowledge</code> over
+                                that source in your Azure AI Search service.</li>
+                            <li>Wait for indexing to complete, then run a test retrieval such as "returns window for
+                                opened beans."</li>
+                        </ul>
+                        <div class="callout verify"><span class="k">Expected result</span>A retrieval test returns
+                            passages from
+                            <code>returns-policy.md</code> with a citation to the source document.
+                        </div>
+                        <div class="callout note"><span class="k">Networking</span>For private setups, knowledge sources
+                            and the
+                            search service support private endpoints — see the Foundry IQ private-retrieval tutorial.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 3 -->
+            <section class="module" id="m3" data-title="Connect to the agent">
+                <h2><span class="badge">Module 3</span> Connect the knowledge base to the concierge</h2>
+                <p class="lead">Add a project connection to the knowledge base, then attach it as knowledge on the
+                    agent.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect"
+                        target="_blank" rel="noopener">Connect IQ to agents</a>
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/how-to/connections-add" target="_blank"
+                        rel="noopener">Add a connection</a>
+                </p>
+
+                <details class="step" data-step="m3-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Connect &amp; attach knowledge</span><span
+                            class="est">~10 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> let the concierge retrieve from the knowledge base.</p>
+                        <ul>
+                            <li>In the <code>contosomart</code> project, add a connection to your Azure AI Search
+                                knowledge base.</li>
+                            <li>On <code>contosomart-concierge</code>, add the <strong>knowledge base</strong> so the
+                                agent grounds document questions in it.</li>
+                            <li>Update instructions to route: numbers → Fabric tool; policies/contracts/runbooks →
+                                knowledge base.</li>
+                        </ul>
+                        <pre class="code"><button class="copy">Copy</button><code>Routing: for sales/inventory/customer numbers use the Fabric tool;
+for returns, supplier contracts, and operations runbooks use the knowledge base.
+Always cite the source document for policy answers.</code></pre>
+                        <div class="callout pro"><span class="k">For builders</span>Prefer a Foundry IQ knowledge base
+                            over the
+                            file-search tool when the content is curated org knowledge you want grounded with citations.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 4 -->
+            <section class="module" id="m4" data-title="Ask & cite">
+                <h2><span class="badge">Module 4</span> Ask document questions — with citations</h2>
+                <p class="lead">Now the concierge answers both the numbers and the documents in one conversation.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect"
+                        target="_blank" rel="noopener">Grounded, cited answers</a>
+                </p>
+
+                <details class="step" data-step="m4-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">Run mixed prompts</span><span
+                            class="est">~8 min</span></summary>
+                    <div class="body">
+                        <p><strong>Intent:</strong> confirm routing and citations.</p>
+                        <ul>
+                            <li>"Can a customer return an opened bag of beans?" → returns policy (Freshness Guarantee),
+                                cited.</li>
+                            <li>"Which supplier covers Ethiopia Yirgacheffe, and what's the priority lead time?" →
+                                supplier contract.</li>
+                            <li>"A fridge hit 11 °C for 40 minutes — what do we do with the stock?" → ops runbook.</li>
+                            <li>"And how many Yirgacheffe bags did we sell last week?" → Fabric tool (numbers).</li>
+                        </ul>
+                        <div class="callout verify"><span class="k">Expected result</span>Policy answers include a
+                            citation to the
+                            source doc; the sales answer still comes from OneLake. One agent, two grounding sources.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Module 5 -->
+            <section class="module" id="m5" data-title="Choose grounding">
+                <h2><span class="badge">Module 5</span> Choose the right grounding</h2>
+                <p class="lead">Foundry IQ, file search and memory solve different problems — pick deliberately.</p>
+                <p class="srclinks">Docs:
+                    <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/foundry-iq-faq"
+                        target="_blank" rel="noopener">FAQ</a>
+                </p>
+
+                <details class="step" data-step="m5-s1">
+                    <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
+                            class="chevron">&#9656;</span><span class="title">IQ vs file search vs memory</span><span
+                            class="est">~5 min</span></summary>
+                    <div class="body">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Use</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Foundry IQ</strong></td>
+                                    <td>Ground answers in curated org content with citations (this lab).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>File search</strong></td>
+                                    <td>A few user-provided files during an interaction; lighter weight.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Memory</strong></td>
+                                    <td>Persist user/agent context across sessions.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="callout note"><span class="k">Note</span>Foundry IQ knowledge sources and Microsoft
+                            Copilot
+                            knowledge sources are <em>not</em> interoperable — the concept is the same, the supported
+                            sources differ.</div>
+                    </div>
+                </details>
+            </section>
+
+            <div class="bridge">
+                <h3>Next: let the agents specialize and collaborate</h3>
+                <p>One concierge now juggles numbers <em>and</em> knowledge. In <strong>Act 12</strong> you'll split the
+                    work
+                    across specialist agents that talk to each other — a Fabric numbers agent and an IQ knowledge agent
+                    behind a
+                    router. → <a href="../foundry-multi-agent/index.html">Continue to Act 12</a></p>
+            </div>
+        </main>
+    </div>
+
+    <footer class="foot">
+        Foundry IQ knowledge (ContosoMart · Act 11) &middot; Grounded in Microsoft Learn (see <code>spec.md</code>).
+        Part 2 of the Microsoft Fabric enablement series.
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "fabws:foundry-iq-knowledge";
+        const modules = [...document.querySelectorAll("section.module")];
+        const navList = document.getElementById("navList");
+        modules.forEach((m, i) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            navList.appendChild(li);
+        });
+        const steps = [...document.querySelectorAll(".step")];
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { state = {}; }
+        function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function renderProgress() {
+            const done = steps.filter(s => state[s.dataset.step]).length;
+            const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressLabel").textContent = pct + "%";
+        }
+        function applyStep(step) {
+            const on = !!state[step.dataset.step];
+            const check = step.querySelector(".check");
+            check.classList.toggle("checked", on);
+            check.setAttribute("aria-checked", on ? "true" : "false");
+            check.innerHTML = on ? "&#10003;" : "";
+        }
+        steps.forEach(step => {
+            applyStep(step);
+            const check = step.querySelector(".check");
+            const toggle = (e) => {
+                e.preventDefault(); e.stopPropagation();
+                state[step.dataset.step] = !state[step.dataset.step];
+                applyStep(step); persist(); renderProgress();
+            };
+            check.addEventListener("click", toggle);
+            check.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") toggle(e); });
+        });
+        renderProgress();
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            state = {}; persist(); steps.forEach(applyStep); renderProgress();
+        });
+        document.querySelectorAll("pre.code .copy").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const code = btn.parentElement.querySelector("code").innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const t = btn.textContent; btn.textContent = "Copied!";
+                    setTimeout(() => (btn.textContent = t), 1200);
+                });
+            });
+        });
+        const navLinks = [...document.querySelectorAll("nav.side a")];
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+                }
+            });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+        modules.forEach(m => spy.observe(m));
+        document.getElementById("themeBtn").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("fabws-theme", next);
+        });
+
+        // ---- Collapsible / drawer sidebar ----
+        (() => {
+            const layout = document.querySelector(".layout");
+            const navToggle = document.getElementById("navToggle");
+            const navBackdrop = document.getElementById("navBackdrop");
+            const sideNav = document.getElementById("sideNav");
+            if (!layout || !navToggle) return;
+            const mq = window.matchMedia("(max-width:860px)");
+            const NAV_KEY = "fabws-nav-collapsed";
+            if (localStorage.getItem(NAV_KEY) === "1") layout.classList.add("nav-collapsed");
+            const closeDrawer = () => { layout.classList.remove("nav-open"); navToggle.setAttribute("aria-expanded", "false"); };
+            const openDrawer = () => { layout.classList.add("nav-open"); navToggle.setAttribute("aria-expanded", "true"); };
+            navToggle.addEventListener("click", () => {
+                if (mq.matches) {
+                    layout.classList.contains("nav-open") ? closeDrawer() : openDrawer();
+                } else {
+                    const collapsed = layout.classList.toggle("nav-collapsed");
+                    localStorage.setItem(NAV_KEY, collapsed ? "1" : "0");
+                }
+            });
+            if (navBackdrop) navBackdrop.addEventListener("click", closeDrawer);
+            document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+            if (sideNav) sideNav.addEventListener("click", e => { if (e.target.closest("a") && mq.matches) closeDrawer(); });
+            mq.addEventListener("change", closeDrawer);
+        })();
+    </script>
+</body>
+
+</html>

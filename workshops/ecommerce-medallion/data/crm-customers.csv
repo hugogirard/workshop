@@ -1,0 +1,9 @@
+crm_id,web_ref,full_name,email,country,signup_date,segment
+CRM-88001,C-0007,Ava Thompson,ava.thompson@example.com,United States,2025-06-11,consumer
+CRM-88002,C-0012,Liam Chen,liam.chen@example.com,Canada,2025-07-02,consumer
+CRM-88003,C-0031,Sofia Rossi,sofia.rossi@example.com,Italy,2025-08-19,consumer
+CRM-88004,C-0044,Noah Williams,noah.williams@example.com,United Kingdom,2025-05-27,business
+CRM-88005,C-0058,Emma Garcia,emma.garcia@example.com,United States,2025-09-14,business
+CRM-88006,C-0073,Mateo Fernandez,mateo.fernandez@example.com,Spain,2025-10-01,consumer
+CRM-88007,C-0007,Ava Thompson,ava.thompson@example.com,US,2025-06-11,consumer
+CRM-88008,C-0044,Noah Williams,noah.w@example.com,UK,2025-05-27,business

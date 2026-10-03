@@ -1,0 +1,4 @@
+order_id,order_date,sku,qty,unit_price_cad,customer_ref
+O-5005,2026-03-02,CLD-010,2,42.00,C-0007
+O-5006,2026-03-02,MUG-100,4,12.00,C-0031
+O-5007,2026-03-02,ESP-001,1,18.50,C-0060
