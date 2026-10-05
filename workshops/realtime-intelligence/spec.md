@@ -9,10 +9,11 @@ warehouse IoT) alongside the batch medallion lakehouse.
 - **Scenario:** ContosoMart streams live storefront clickstream and cold-store sensor telemetry,
   queries it with KQL, visualizes it on a Real-Time dashboard, and fires Activator alerts on
   cart-abandonment spikes and cold-store temperature excursions.
-- **Format:** self-contained interactive `index.html`; hands-on lab on a Fabric trial.
+- **Format:** self-contained interactive `index.html`; hands-on lab on Fabric capacity.
 - **Estimated time:** ~100–120 min.
-- **Prerequisites:** Fabric trial capacity (60 days), a Fabric (Free) license. No external Azure
-  resources required — you push sample events from the KQL editor / an eventstream sample source.
+- **Prerequisites:** Fabric capacity (F64+), a Fabric (Free) license. No external Azure
+  resources required — a small Python sender (`lab_data/realtime-intelligence/sender/`) pushes
+  real events to the Eventstream Custom endpoint, or bulk-load the files as an offline fallback.
 
 ## Sources (verified 2026-09-13)
 
@@ -37,6 +38,7 @@ warehouse IoT) alongside the batch medallion lakehouse.
 | --- | --- | --- |
 | `clickstream-events.json` | Storefront clickstream | 15 events; session funnels; mixed-case `customer_ref` reused from the CRM in `ecommerce-medallion`; CAD values |
 | `warehouse-sensors.csv` | Cold/dry-store IoT sensors | 10 rows; `SENS-01` cold-store temperature excursion after a door-open to trip an alert |
+| `sender/send_events.py` | Live event producer | Streams the seed rows + endless synthetic events to the Eventstream Custom endpoint (Event Hubs); JSON fields match the `Clickstream`/`Sensors` columns |
 
 ## Module map (source of truth)
 
@@ -45,7 +47,7 @@ primary language, so language tabs show **KQL** and (where relevant) the **T-SQL
 the KQL queryset.
 
 ### Module 0 — Setup (F-TRIAL, F-WORKSPACE, F-RTI)
-- Reuse the `ContosoMart-Analytics` workspace (or start the 60-day trial). Concept: Real-Time
+- Reuse the `ContosoMart-Analytics` workspace (on Fabric F64+ capacity). Concept: Real-Time
   Intelligence responds to events *as they happen* vs the scheduled batch medallion. [analogy: OLTP triggers vs nightly ETL]
 
 ### Module 1 — Eventhouse & KQL database (F-EVENTHOUSE, F-KQLDB)
@@ -53,8 +55,10 @@ the KQL queryset.
   data auto-organized by arrival time. [analogy: a purpose-built append-only log warehouse]
 
 ### Module 2 — Ingest → Eventstream (bronze-in-motion) (F-EVENTSTREAM, F-REALTIMEHUB)
-- Create Eventstream `es_clickstream`; use a sample/custom source to land `clickstream-events`
-  into a KQL table; note Real-Time hub as the catalog of streams. Concept: no-code stream ingest.
+- Create Eventstream `es_clickstream` with a **Custom endpoint** source landing `clickstream-events`
+  into the `Clickstream` KQL table; stream real events with the Python sender (`sender/send_events.py`),
+  with a file bulk-load as the offline fallback; note Real-Time hub as the catalog of streams.
+  Concept: no-code stream ingest.
 
 ### Module 3 — Shape & query with KQL (silver-in-motion) (F-KQL, F-EVENTHOUSE)
 - KQL: parse/normalize `customer_ref`, compute session funnels, 5-min windowed cart-abandon rate,

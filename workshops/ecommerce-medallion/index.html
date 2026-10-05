@@ -1018,7 +1018,7 @@
                     in
                     OneLake and refine it through <strong>bronze → silver → gold</strong>, then serve a Power BI report
                     with
-                    Direct Lake — all on a free Microsoft Fabric trial.</p>
+                    Direct Lake — all on Microsoft Fabric.</p>
                 <div class="chips">
                     <span class="chip">~100–120 min</span>
                     <span class="chip bronze">Bronze · raw</span>
@@ -1095,11 +1095,11 @@
             </div>
 
             <section class="module" id="m0" data-title="Setup">
-                <h2><span class="badge">Module 0</span> Set up your Fabric trial</h2>
-                <p class="lead">Get a free 60-day Fabric capacity and a workspace to build in.</p>
+                <h2><span class="badge">Module 0</span> Set up your Fabric workspace</h2>
+                <p class="lead">Use your enterprise Fabric capacity and a workspace to build in.</p>
                 <p class="srclinks">Docs:
-                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
-                        rel="noopener">Fabric trial</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/enterprise/licenses" target="_blank"
+                        rel="noopener">Fabric capacity &amp; licensing</a>
                     <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/create-workspaces" target="_blank"
                         rel="noopener">Create a workspace</a>
                 </p>
@@ -1114,8 +1114,8 @@
                                 </p>
                             </div>
                             <div class="qa"><span class="q">Why in Fabric</span>
-                                <p>No servers to provision or wire together. The trial hands you capacity instantly, and
-                                    everything you build shares one billing pool and one OneLake.</p>
+                                <p>No servers to provision or wire together. Your capacity gives you compute instantly,
+                                    and everything you build shares one billing pool and one OneLake.</p>
                             </div>
                             <div class="qa"><span class="q">What it solves</span>
                                 <p>ContosoMart gets a single place to build the whole estate — no infrastructure tickets
@@ -1123,7 +1123,7 @@
                             </div>
                         </div>
                         <svg class="cdiag" viewBox="0 0 440 184" role="img"
-                            aria-label="A trial capacity provides compute to the ContosoMart-Analytics workspace, which contains Fabric items.">
+                            aria-label="A Fabric capacity provides compute to the ContosoMart-Analytics workspace, which contains Fabric items.">
                             <defs>
                                 <marker id="ar0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
                                     orient="auto-start-reverse">
@@ -1131,7 +1131,7 @@
                                 </marker>
                             </defs>
                             <rect class="soft" x="20" y="14" width="400" height="34" rx="8"></rect>
-                            <text x="220" y="35" text-anchor="middle" font-size="12" font-weight="600">Trial capacity —
+                            <text x="220" y="35" text-anchor="middle" font-size="12" font-weight="600">Fabric capacity —
                                 shared compute pool</text>
                             <path class="flow" d="M220 48 L220 66" marker-end="url(#ar0)"></path>
                             <rect class="box" x="20" y="70" width="400" height="98" rx="10"></rect>
@@ -1149,36 +1149,30 @@
 
                 <details class="step" data-step="m0-s1" open>
                     <summary><span class="check" role="checkbox" aria-checked="false" tabindex="0"></span><span
-                            class="chevron">&#9656;</span><span class="title">Start the 60-day Fabric trial</span><span
+                            class="chevron">&#9656;</span><span class="title">Open Fabric on your capacity</span><span
                             class="est">~5 min</span></summary>
                     <div class="body">
                         <div class="why"><span class="k">Why</span>No capacity means no compute to run anything — this
                             is step zero for the entire estate.</div>
                         <ol>
                             <li>Open <a href="https://app.fabric.microsoft.com" target="_blank"
-                                    rel="noopener">app.fabric.microsoft.com</a> and sign in.</li>
-                            <li>If prompted, sign up for the free <strong>Power BI</strong> (Fabric Free) license
-                                first — a Power BI / Fabric (Free) license is required before you can start the Fabric
-                                trial.</li>
-                            <li>Select the <strong>Account manager</strong> (your photo, top-right) → <strong>Start
-                                    trial</strong>.</li>
-                            <li>Agree to the terms and select <strong>Activate</strong>. Pick a trial capacity region
-                                close to you.</li>
+                                    rel="noopener">app.fabric.microsoft.com</a> and sign in with your work account.</li>
+                            <li>Confirm you have a <strong>Fabric (F) capacity</strong> assigned to your tenant — your
+                                admin provisions this in the Azure portal or the Fabric admin portal.</li>
                             <li>In the product/experience switcher (bottom-left), select
                                 <strong>Power BI</strong>, then switch to <strong>Fabric</strong> — this lab uses both
                                 experiences.
                             </li>
                         </ol>
-                        <div class="callout pro"><span class="k">For data pros</span>The trial capacity is your compute
-                            pool — think of it like a temporary Azure subscription for analytics that's billed to
-                            Microsoft, not you.</div>
-                        <div class="callout note"><span class="k">Note</span>The trial runs 60 days as an
-                            <strong>F4</strong> or <strong>F64</strong> capacity (some tenants can bump F4→F64).
-                            <strong>Copilot / AI features aren't available</strong> in the trial, and you get up to
-                            <strong>1 TB</strong> in OneLake.
+                        <div class="callout pro"><span class="k">For data pros</span>The Fabric capacity is your compute
+                            pool — a single SKU (F2–F2048) billed to your Azure subscription that powers every workload
+                            in the tenant.</div>
+                        <div class="callout note"><span class="k">Note</span>On <strong>F64+</strong> capacity you get
+                            full throughput plus <strong>Copilot / AI features</strong>, and OneLake storage scales with
+                            your capacity — no 60-day clock or feature gating.
                         </div>
-                        <div class="callout verify"><span class="k">Expected result</span>Your Account manager shows a
-                            <em>Trial status</em> with days remaining.
+                        <div class="callout verify"><span class="k">Expected result</span>You can see Fabric workloads
+                            and your capacity is active in the Account manager.
                         </div>
                     </div>
                 </details>
@@ -1195,15 +1189,14 @@
                             </li>
                             <li>Name it <strong>ContosoMart-Analytics</strong>.</li>
                             <li>Expand <strong>Advanced</strong> → under <strong>License mode</strong> choose
-                                <strong>Trial</strong> (or Fabric capacity) so it can hold Fabric items.
+                                <strong>Fabric capacity</strong> and assign your capacity so it can hold Fabric items.
                             </li>
                             <li>Select <strong>Apply</strong>.</li>
                         </ol>
                         <div class="callout note"><span class="k">Note</span>File uploads later use the Dataflow/upload
-                            path, which relies on <strong>OneDrive</strong> being configured for your account. If you
-                            don't have it, sign up for the Microsoft 365 free trial.</div>
+                            path, which relies on <strong>OneDrive</strong> being configured for your account.</div>
                         <div class="callout verify"><span class="k">Expected result</span>An empty
-                            <em>ContosoMart-Analytics</em> workspace opens, assigned to the trial capacity.
+                            <em>ContosoMart-Analytics</em> workspace opens, assigned to your Fabric capacity.
                         </div>
                     </div>
                 </details>
@@ -1282,7 +1275,7 @@
                             data lake. <strong>Tables</strong> is your managed schema (Delta); <strong>Files</strong> is
                             staging for any format — like a landing zone before you model.</div>
                         <div class="callout note"><span class="k">Why one lakehouse?</span>To keep every snippet
-                            runnable in a single trial, we use three <em>schemas</em> (<code>bronze</code>,
+                            runnable in one workspace, we use three <em>schemas</em> (<code>bronze</code>,
                             <code>silver</code>, <code>gold</code>) in one lakehouse. In production, Microsoft
                             recommends a lakehouse — or workspace — <em>per layer</em> for governance (see the medallion
                             doc).

@@ -419,6 +419,25 @@
             background: rgba(255, 255, 255, .18);
         }
 
+        figure.shot {
+            margin: 12px 0;
+        }
+
+        figure.shot img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        }
+
+        figure.shot figcaption {
+            margin-top: 6px;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+
         .tabs {
             margin: 10px 0;
         }
@@ -788,16 +807,16 @@
                 <p class="srclinks">Docs:
                     <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/overview" target="_blank"
                         rel="noopener">Real-Time Intelligence overview</a>
-                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
-                        rel="noopener">Fabric trial</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/enterprise/licenses" target="_blank"
+                        rel="noopener">Fabric capacity &amp; licensing</a>
                 </p>
                 <div class="learnmore"><span class="k">Learn more</span>
                     <a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/overview" target="_blank"
                         rel="noopener">What is RTI</a>
                     <a href="https://learn.microsoft.com/en-us/fabric/real-time-hub/real-time-hub-overview"
                         target="_blank" rel="noopener">Real-Time hub</a>
-                    <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial" target="_blank"
-                        rel="noopener">Trial capacity</a>
+                    <a href="https://learn.microsoft.com/en-us/fabric/enterprise/licenses" target="_blank"
+                        rel="noopener">Fabric capacity</a>
                 </div>
 
                 <details class="step" data-step="m0-s1" open>
@@ -819,7 +838,7 @@
                             database. Batch medallion = nightly ETL; RTI = an always-on trigger on the firehose.</div>
                         <div class="callout note"><span class="k">Note</span>RTI doesn't require
                             high volumes — "real-time" just means event-driven rather than scheduled. Even
-                            a trickle of events works.</div>
+                            a trickle of events works, and enterprise F64 capacity handles bursty firehoses.</div>
                         <div class="callout verify"><span class="k">Expected result</span>You can state, in
                             one sentence, the difference between the batch medallion lab and this one.</div>
                     </div>
@@ -835,16 +854,16 @@
                     <div class="body">
                         <p><strong>What &amp; why:</strong> We keep the whole saga in one workspace so the
                             real-time events can later join the medallion gold tables. If you did the
-                            medallion lab, reuse <code>ContosoMart-Analytics</code>; otherwise start the
-                            trial and create it.</p>
-                        <p>Start the trial from <strong>Account manager → Start trial</strong>, then create
-                            the workspace and set it to the Trial capacity.</p>
-                        <div class="callout note"><span class="k">Note</span>The trial runs 60 days as an
-                            <strong>F4 or F64</strong> capacity; Copilot/AI isn't included, and this lab
-                            avoids Copilot-dependent steps.
+                            medallion lab, reuse <code>ContosoMart-Analytics</code>; otherwise create it on
+                            your Fabric capacity.</p>
+                        <p>Create (or open) the <code>ContosoMart-Analytics</code> workspace and assign it to
+                            your <strong>Fabric capacity (F64 or higher)</strong>.</p>
+                        <div class="callout note"><span class="k">Note</span>On enterprise
+                            <strong>F64+</strong> capacity you get full throughput plus Copilot/AI features;
+                            this lab works end-to-end with no capacity-driven workarounds.
                         </div>
                         <div class="callout verify"><span class="k">Expected result</span>You're in the
-                            <code>ContosoMart-Analytics</code> workspace on Trial capacity.
+                            <code>ContosoMart-Analytics</code> workspace on your Fabric capacity.
                         </div>
                     </div>
                 </details>
@@ -916,6 +935,13 @@
     sensor_id: string, ts: datetime, warehouse: string,
     zone: string, temp_c: real, humidity_pct: int, door_open: bool
 )</code></pre>
+                        <figure class="shot">
+                            <img src="../../images/createKLTable.png"
+                                alt="KQL queryset editor with the .create table commands for Clickstream and Sensors in the eh_contoso_rti database" />
+                            <figcaption>Run the <code>.create table</code> commands in the KQL queryset editor of the
+                                <code>eh_contoso_rti</code> database.
+                            </figcaption>
+                        </figure>
                         <div class="callout note"><span class="k">Note</span>KQL control commands start with a
                             dot (<code>.create</code>). Keep column names matching the sample files exactly so
                             ingestion maps cleanly.</div>
@@ -955,21 +981,134 @@
                         <span class="est">~8 min</span>
                     </summary>
                     <div class="body">
-                        <p><strong>What &amp; why:</strong> The Eventstream is the no-code ingest pipe. In
-                            the trial (no external Event Hub), use the built-in <strong>Sample data</strong>
-                            source to prove the flow end-to-end, then swap in a real source later.</p>
-                        <p><strong>+ New item → Eventstream</strong> → name <code>es_clickstream</code>.
-                            Add source <strong>Sample data</strong> (e.g. a retail/clickstream sample), add a
-                            destination <strong>Eventhouse / KQL Database</strong> → <code>eh_contoso_rti</code>
-                            → table <code>Clickstream</code>. Publish.</p>
+                        <p><strong>What &amp; why:</strong> The Eventstream is Fabric's no-code ingest pipe.
+                            In production, ContosoMart's storefront app (or an Azure Event Hub / IoT Hub in
+                            front of it) pushes clickstream events straight into your <code>Clickstream</code>
+                            table in real time. We wire that same pattern here with a <strong>Custom
+                                endpoint</strong> source so the pipe lands our <em>real</em> ContosoMart data.</p>
+                        <div class="callout note"><span class="k">How the real data flows</span>The Custom
+                            endpoint gives you an Event Hub-compatible connection your producers push to. For
+                            this hands-on we populate <code>Clickstream</code> with the real ContosoMart events
+                            in <strong>step 2 below</strong> (<em>Get data → Local file</em>) — the live
+                            endpoint stays ready for ongoing events. Every query in this lab runs on that real
+                            data.</div>
+                        <ol>
+                            <li>In the workspace, <strong>+ New item → Eventstream</strong> → name it
+                                <code>es_clickstream</code> → <strong>Create</strong>.
+                            </li>
+                            <li>You now land on the <strong>"Design a flow to ingest, transform, and route
+                                    streaming events"</strong> screen with three tiles. Click
+                                <strong>Use custom endpoint</strong> (the third tile) — the enterprise way to
+                                bring your own real events in.
+                                <figure class="shot">
+                                    <img src="../../images/emptyEventStream.png"
+                                        alt="Empty Eventstream editor showing three tiles: Connect data sources, Use sample data, Use custom endpoint" />
+                                    <figcaption>The empty Eventstream canvas — use
+                                        <strong>Use custom endpoint</strong> (right tile) to ingest your own
+                                        real events. (The middle <em>Use sample data</em> tile only emits
+                                        Microsoft's canned datasets — handy to just watch motion, but it won't
+                                        carry ContosoMart data.)
+                                    </figcaption>
+                                </figure>
+                            </li>
+                            <li>Name the source (e.g. <code>src_storefront</code>) and click <strong>Add</strong>.
+                                Fabric creates the endpoint and shows its connection details (Event Hub name +
+                                keys) — this is where your app/producer sends events.
+                            </li>
+                            <li>On the source node, click the <strong>+</strong> /
+                                <strong>Transform events or add destination</strong> handle → choose
+                                <strong>Eventhouse</strong> as the destination.
+                            </li>
+                            <li>In the <strong>Eventhouse</strong> destination panel, set each field:
+                                <strong>Data ingestion mode</strong> = <em>Event processing before
+                                    ingestion</em>, <strong>Destination name</strong> = <code>Eventhouse</code>,
+                                <strong>Workspace</strong> = <code>ContosoMart-Analytics</code>,
+                                <strong>Eventhouse</strong> = <code>eh_contoso_rti</code>,
+                                <strong>KQL Database</strong> = <code>eh_contoso_rti</code>,
+                                <strong>KQL Destination table</strong> = <code>Clickstream</code> (the table
+                                you created in Module 1), <strong>Input data format</strong> = <code>Json</code>.
+                                Leave <strong>Activate ingestion after adding the data source</strong> checked,
+                                then click <strong>Save</strong>.
+                                <figure class="shot">
+                                    <img src="../../images/dataIngestion.png"
+                                        alt="Eventstream canvas with src_storefront routed to the Eventhouse destination, and the Eventhouse panel showing Event processing before ingestion, workspace ContosoMart-Analytics, Eventhouse and KQL database eh_contoso_rti, destination table Clickstream, input format Json" />
+                                    <figcaption>The Eventhouse destination panel — match these values. Note
+                                        <em>Event processing before ingestion</em> can't be changed once the
+                                        KQL destination starts ingesting.
+                                    </figcaption>
+                                </figure>
+                            </li>
+                            <li>Click <strong>Publish</strong> (top ribbon) to activate the flow.</li>
+                        </ol>
+                        <div class="callout note"><span class="k">Seeing "Add a mapper to map schema"?</span>
+                            That orange ⓘ on the Eventhouse node is <strong>expected</strong> — the Custom
+                            endpoint hasn't received any events yet, so Eventstream has no sample to auto-map to
+                            <code>Clickstream</code>. It's safe to <strong>Publish and ignore it</strong>: the
+                            next step runs a live sender whose JSON fields match the <code>Clickstream</code>
+                            columns exactly, so the mapper resolves itself once events arrive.
+                        </div>
                         <div class="callout pro"><span class="k">For data pros</span>This is your
-                            ingest/CDC layer. In production the source is an Azure Event Hub, IoT Hub, Kafka
-                            topic, or a database CDC feed — all no-code connectors in the same designer.</div>
-                        <div class="callout note"><span class="k">Note</span>The trial can't provision an
-                            external Event Hub without an Azure subscription; the built-in sample source
-                            keeps this hands-on with zero external setup.</div>
-                        <div class="callout verify"><span class="k">Expected result</span>The Eventstream
-                            shows a live green data-preview flowing from source to the KQL destination.</div>
+                            ingest/CDC layer. In the next step we push real events to this endpoint with a small
+                            Python sender; in production you'd swap it for an Azure Event Hub, IoT Hub, Kafka
+                            topic, or a database CDC feed — all no-code connectors in the same designer, all
+                            landing in <code>Clickstream</code> with matching schema.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>The published
+                            Eventstream shows the <code>src_storefront</code> source node routed to the
+                            <code>eh_contoso_rti</code> / <code>Clickstream</code> destination, ready to receive
+                            events. We stream real ContosoMart events into it next.
+                        </div>
+                    </div>
+                </details>
+
+                <details class="step" data-step="m2-s1b">
+                    <summary>
+                        <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
+                        <span class="chevron">&#9656;</span>
+                        <span class="title">Stream live events into <code>Clickstream</code></span>
+                        <span class="est">~8 min</span>
+                    </summary>
+                    <div class="body">
+                        <p><strong>What &amp; why:</strong> Now make the pipe <em>live</em>. A small Python
+                            sender pushes real ContosoMart storefront events to your Custom endpoint over the
+                            Event Hubs protocol — exactly how your app or an Event Hub would in production.
+                            Rows land in <code>Clickstream</code> in real time and the schema-mapper warning
+                            clears on its own.</p>
+                        <ol>
+                            <li>Grab the endpoint connection string: in the Eventstream editor select the
+                                <code>src_storefront</code> source node → <strong>Keys</strong> (or
+                                <strong>Sample code</strong>) tab → copy
+                                <strong>Connection string-primary key</strong>.
+                            </li>
+                            <li>From a terminal, install the dependency and run the sender:
+                                <pre class="code"><button class="copy">Copy</button><code>cd lab_data/realtime-intelligence/sender
+pip install -r requirements.txt
+
+# PowerShell
+$env:EVENTSTREAM_CONN = "&lt;paste connection string&gt;"
+python send_events.py --loop --rate 2</code></pre>
+                            </li>
+                            <li>Watch the Eventstream data-preview turn green and, in the KQL queryset, run
+                                <code>Clickstream | count</code> a few times — it climbs as events stream in.
+                            </li>
+                        </ol>
+                        <div class="callout note"><span class="k">No Python?</span>Use the Docker image
+                            instead (<code>docker build -t contoso-sender -f sender/Dockerfile .</code> then
+                            <code>docker run --rm -e EVENTSTREAM_CONN="…" contoso-sender --loop --rate 2</code>),
+                            or just skip to the next step and bulk-load the files. The sender starts with the
+                            15 seed rows, then generates an endless synthetic stream so dashboards keep moving.
+                        </div>
+                        <div class="callout pro"><span class="k">For data pros</span>Want sensors live too?
+                            Create a second Eventstream / Custom endpoint routed to the <code>Sensors</code>
+                            table and run <code>python send_events.py --source sensors --loop</code> — SENS-01
+                            periodically drifts above 6&nbsp;°C with <code>door_open=true</code> to fire the
+                            Module 5 alert.
+                        </div>
+                        <div class="callout verify"><span class="k">Expected result</span>
+                            <code>Clickstream | count</code> increases on each run;
+                            <code>Clickstream | top 10 by ts desc</code>
+                            shows fresh events, and the Eventhouse node no longer shows the mapper warning.
+                        </div>
                     </div>
                 </details>
 
@@ -977,14 +1116,15 @@
                     <summary>
                         <span class="check" role="checkbox" aria-checked="false" tabindex="0"></span>
                         <span class="chevron">&#9656;</span>
-                        <span class="title">Load our sample clickstream + sensors</span>
+                        <span class="title">Load from files (offline fallback) + sensors</span>
                         <span class="est">~10 min</span>
                     </summary>
                     <div class="body">
-                        <p><strong>What &amp; why:</strong> To query <em>our</em> ContosoMart data (matching
-                            the CRM refs), also one-shot load the two sample files with
-                            <strong>Get data → Local file</strong> in the KQL database — a fast alternative
-                            to a live source for the exercises below.
+                        <p><strong>What &amp; why:</strong> No Python handy, or want the data instantly? This is
+                            the offline fallback — one-shot load the two sample files with
+                            <strong>Get data → Local file</strong> in the KQL database instead of streaming them.
+                            (If you already ran the live sender, <code>Clickstream</code> is populated; you can
+                            still load <code>Sensors</code> here.)
                         </p>
                         <p>Upload <code>lab_data/realtime-intelligence/clickstream-events.json</code> → existing table
                             <code>Clickstream</code> (JSON mapping), and
@@ -1212,8 +1352,8 @@ ORDER BY events DESC;</code></pre>
                         <div class="callout pro"><span class="k">For data pros</span>This is a database
                             trigger for the physical world — declarative condition → action, but over a live
                             event feed instead of table DML.</div>
-                        <div class="callout note"><span class="k">Note</span>Trial email/Teams actions work;
-                            Power Automate actions may need extra licensing. Grouping by
+                        <div class="callout note"><span class="k">Note</span>Email/Teams and Power Automate
+                            actions are all available on enterprise capacity. Grouping by
                             <code>sensor_id</code> avoids one noisy sensor masking another.
                         </div>
                         <div class="callout verify"><span class="k">Expected result</span>The rule shows
