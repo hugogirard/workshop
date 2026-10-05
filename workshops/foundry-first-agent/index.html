@@ -585,6 +585,37 @@
             display: none;
         }
 
+        @media (min-width: 861px) {
+            .nav-collapsed nav.side a {
+                position: relative;
+            }
+
+            .nav-collapsed nav.side a::after {
+                content: attr(data-label);
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                margin-left: 10px;
+                background: var(--fab-navy);
+                color: #fff;
+                padding: 4px 9px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .15s ease;
+                box-shadow: var(--shadow);
+                z-index: 40;
+            }
+
+            .nav-collapsed nav.side a:hover::after,
+            .nav-collapsed nav.side a:focus-visible::after {
+                opacity: 1;
+            }
+        }
+
         @media (max-width:860px) {
             .layout {
                 grid-template-columns: 1fr;
@@ -1007,7 +1038,7 @@ Console.WriteLine($"Agent: {agent.Name} v{agent.Version}");</code></pre>
         const navList = document.getElementById("navList");
         modules.forEach((m, i) => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            li.innerHTML = `<a href="#${m.id}" data-label="${m.dataset.title}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
             navList.appendChild(li);
         });
         const steps = [...document.querySelectorAll(".step")];
@@ -1045,10 +1076,15 @@ Console.WriteLine($"Agent: {agent.Name} v{agent.Version}");</code></pre>
         document.querySelectorAll("pre.code .copy").forEach(btn => {
             btn.addEventListener("click", () => {
                 const code = btn.parentElement.querySelector("code").innerText;
-                navigator.clipboard.writeText(code).then(() => {
-                    const t = btn.textContent; btn.textContent = "Copied!";
-                    setTimeout(() => (btn.textContent = t), 1200);
+                const flash = () => { const t = btn.textContent; btn.textContent = "Copied!"; setTimeout(() => (btn.textContent = t), 1200); };
+                const fallback = () => new Promise((res, rej) => {
+                    const ta = document.createElement("textarea");
+                    ta.value = code; ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+                    document.body.appendChild(ta); ta.focus(); ta.select();
+                    try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { document.body.removeChild(ta); }
                 });
+                const op = (navigator.clipboard && window.isSecureContext) ? navigator.clipboard.writeText(code) : fallback();
+                op.then(flash).catch(() => fallback().then(flash).catch(() => { const t = btn.textContent; btn.textContent = "Press Ctrl+C"; setTimeout(() => (btn.textContent = t), 1500); }));
             });
         });
         document.querySelectorAll("[data-tabs]").forEach(group => {

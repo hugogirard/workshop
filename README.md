@@ -13,6 +13,7 @@ story end to end.
 | --- | --- |
 | [`index.html`](index.html) | **Landing page** — the tour hub linking all workshops (open this first) |
 | [`SKILL.md`](SKILL.md) | The `fabric-workshop-builder` skill — how to author a new workshop |
+| [`skills/fabric-workshop-updater/`](skills/fabric-workshop-updater/SKILL.md) | The `fabric-workshop-updater` skill — scan the docs, propose new acts, refresh labs + decks |
 | [`AUTHORING.md`](AUTHORING.md) | Conventions: 7-module arc, interactive components, theme tokens, grounding rules, canonical sources |
 | [`templates/`](templates/) | Reusable HTML shell + spec/data-readme templates to copy |
 | [`workshops/`](workshops/) | The workshops themselves (one folder each) |
@@ -146,6 +147,14 @@ Follow [`SKILL.md`](SKILL.md): pick a slug, copy the templates, ground the `spec
 Microsoft Learn (verify every URL), author the modules, generate sample data, and run the
 Definition-of-Done checks in [`AUTHORING.md`](AUTHORING.md) §8. Use
 `workshops/ecommerce-medallion/` as the worked example.
+
+## Keep the labs current
+To refresh the saga against the latest Microsoft docs, use the
+[`fabric-workshop-updater`](skills/fabric-workshop-updater/SKILL.md) skill ("update the labs").
+It scans Fabric, Azure AI Foundry, and Defender for AI for new or changed capabilities,
+proposes new acts that fit [`STORY.md`](STORY.md), and — after you approve — authors the
+module (via `fabric-workshop-builder`) and rebuilds the `ContosoMart-Journey` and per-act
+prelab decks.
 
 > This `SKILL.md` lives in the repo so it's versioned with the deck. To have it auto-discovered
 > everywhere, copy the `workshop/` folder into your skills directory (e.g. `~/.copilot/skills/`).

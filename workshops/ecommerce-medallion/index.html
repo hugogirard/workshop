@@ -517,6 +517,25 @@
             color: var(--fab-bronze);
         }
 
+        figure.shot {
+            margin: 12px 0;
+        }
+
+        figure.shot img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        }
+
+        figure.shot figcaption {
+            margin-top: 6px;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+
         table.data {
             border-collapse: collapse;
             width: 100%;
@@ -890,6 +909,37 @@
             display: none;
         }
 
+        @media (min-width: 861px) {
+            .nav-collapsed nav.side a {
+                position: relative;
+            }
+
+            .nav-collapsed nav.side a::after {
+                content: attr(data-label);
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                margin-left: 10px;
+                background: var(--fab-navy);
+                color: #fff;
+                padding: 4px 9px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .15s ease;
+                box-shadow: var(--shadow);
+                z-index: 40;
+            }
+
+            .nav-collapsed nav.side a:hover::after,
+            .nav-collapsed nav.side a:focus-visible::after {
+                opacity: 1;
+            }
+        }
+
         @media (max-width:860px) {
             .layout {
                 grid-template-columns: 1fr;
@@ -1107,10 +1157,17 @@
                         <ol>
                             <li>Open <a href="https://app.fabric.microsoft.com" target="_blank"
                                     rel="noopener">app.fabric.microsoft.com</a> and sign in.</li>
+                            <li>If prompted, sign up for the free <strong>Power BI</strong> (Fabric Free) license
+                                first — a Power BI / Fabric (Free) license is required before you can start the Fabric
+                                trial.</li>
                             <li>Select the <strong>Account manager</strong> (your photo, top-right) → <strong>Start
                                     trial</strong>.</li>
                             <li>Agree to the terms and select <strong>Activate</strong>. Pick a trial capacity region
                                 close to you.</li>
+                            <li>In the product/experience switcher (bottom-left), select
+                                <strong>Power BI</strong>, then switch to <strong>Fabric</strong> — this lab uses both
+                                experiences.
+                            </li>
                         </ol>
                         <div class="callout pro"><span class="k">For data pros</span>The trial capacity is your compute
                             pool — think of it like a temporary Azure subscription for analytics that's billed to
@@ -1242,15 +1299,60 @@
                     <div class="body">
                         <div class="why"><span class="k">Why</span>Separate bronze / silver / gold schemas keep raw,
                             cleansed and curated data clearly — and safely — apart.</div>
-                        <p>Open a new notebook on this lakehouse (<strong>Open notebook → New notebook</strong>) and
-                            run:</p>
+                        <div class="callout note"><span class="k">What's a lakehouse schema?</span>In a
+                            schema-enabled lakehouse, a <strong>schema</strong> is a named folder inside the
+                            <strong>Tables</strong> area that groups related Delta tables — just like a schema in a SQL
+                            database (so <code>bronze.sales</code> means table <code>sales</code> in schema
+                            <code>bronze</code>). We create one schema per medallion layer:
+                            <code>bronze</code>, <code>silver</code>, <code>gold</code>.
+                        </div>
+                        <p>Open a <strong>Notebook</strong> on this lakehouse (two ways — either works): from the
+                            Lakehouse explorer ribbon select <strong>Open notebook</strong> → <strong>New
+                                notebook</strong>;
+                            or, on a brand-new empty lakehouse, scroll down to the <strong>Get data in your
+                                lakehouse</strong> section on the canvas and pick the <strong>Open notebook</strong>
+                            card.
+                            In the first cell, run this PySpark:
+                        </p>
+                        <div class="callout note"><span class="k">Don't see "Open notebook"?</span>You're probably in
+                            the <strong>SQL analytics endpoint</strong>, not the lakehouse. Tell-tale signs: the
+                            explorer
+                            shows SQL schemas (<code>dbo</code>, <code>INFORMATION_SCHEMA</code>, <code>sys</code>), the
+                            ribbon has <strong>New SQL query</strong>, and the canvas says
+                            <em>"Add data in lake mode"</em> with a <strong>Go to lake mode</strong> button. Switch to
+                            the <strong>Lakehouse</strong> view — click <strong>Go to lake mode</strong>, or use the
+                            view
+                            switcher at the top-right of the item and pick <strong>Lakehouse</strong>. In lake mode the
+                            <strong>Open notebook</strong> option is on the ribbon <em>and</em> as a card lower down the
+                            canvas under <strong>Get data in your lakehouse</strong> (you may need to scroll).
+                        </div>
+                        <figure class="shot">
+                            <img src="../../images/notebook.png"
+                                alt="Lakehouse in lake mode showing the 'Get data in your lakehouse' section with the Open notebook card.">
+                            <figcaption>In lake mode, pick the <strong>Open notebook</strong> card under
+                                <em>Get data in your lakehouse</em>.
+                            </figcaption>
+                        </figure>
                         <pre class="code"><button class="copy">Copy</button><code>spark.sql("CREATE SCHEMA IF NOT EXISTS bronze")
 spark.sql("CREATE SCHEMA IF NOT EXISTS silver")
 spark.sql("CREATE SCHEMA IF NOT EXISTS gold")
 spark.sql("SHOW SCHEMAS").show()</code></pre>
+                        <div class="callout note"><span class="k">Notebook — not a Spark SQL query</span>This snippet is
+                            <strong>PySpark</strong>, so it must run in a <strong>Notebook</strong>. Pasting it into a
+                            <strong>New Spark SQL query</strong> fails with
+                            <code>[PARSE_SYNTAX_ERROR] … at or near 'spark'</code>, because a Spark SQL query expects
+                            plain SQL — e.g. <code>CREATE SCHEMA IF NOT EXISTS bronze;</code> — not Python.
+                        </div>
                         <div class="callout verify"><span class="k">Expected result</span><code>SHOW SCHEMAS</code>
                             lists <code>bronze</code>, <code>silver</code>, and <code>gold</code>. Keep this notebook —
                             you'll reuse it.</div>
+                        <figure class="shot">
+                            <img src="../../images/schemanotebook.png"
+                                alt="Notebook cell running the CREATE SCHEMA PySpark with SHOW SCHEMAS output listing the schemas.">
+                            <figcaption>The cell runs green and <code>SHOW SCHEMAS</code> prints the
+                                <code>namespace</code> list.
+                            </figcaption>
+                        </figure>
                     </div>
                 </details>
             </section>
@@ -1321,12 +1423,21 @@ spark.sql("SHOW SCHEMAS").show()</code></pre>
                     <div class="body">
                         <div class="why"><span class="k">Why</span>Bronze must capture the sources untouched so you can
                             always replay from the original if a later transform goes wrong.</div>
-                        <p>Use the files from this workshop's <code>data/</code> folder:</p>
+                        <p>Use the files from this workshop's folder in
+                            <code>lab_data/ecommerce-medallion/</code> (download each one, then upload it to the
+                            lakehouse):
+                        </p>
                         <ul>
-                            <li><code>raw-sales.json</code> — website orders (messy: mixed dates, currencies, test rows)
+                            <li><a href="../../lab_data/ecommerce-medallion/raw-sales.json"
+                                    download><code>raw-sales.json</code></a>
+                                — website orders (messy: mixed dates, currencies, test rows)
                             </li>
-                            <li><code>inventory.csv</code> — warehouse stock levels</li>
-                            <li><code>crm-customers.csv</code> — CRM export (with duplicate customers)</li>
+                            <li><a href="../../lab_data/ecommerce-medallion/inventory.csv"
+                                    download><code>inventory.csv</code></a>
+                                — warehouse stock levels</li>
+                            <li><a href="../../lab_data/ecommerce-medallion/crm-customers.csv"
+                                    download><code>crm-customers.csv</code></a>
+                                — CRM export (with duplicate customers)</li>
                         </ul>
                         <ol>
                             <li>In the Lakehouse explorer, right-click <strong>Files</strong> → <strong>New
@@ -1334,6 +1445,20 @@ spark.sql("SHOW SCHEMAS").show()</code></pre>
                             <li>Right-click <strong>raw</strong> → <strong>Upload</strong> → <strong>Upload
                                     files</strong> and add all three files.</li>
                         </ol>
+                        <figure class="shot">
+                            <img src="../../images/subfolder.png"
+                                alt="Lakehouse explorer with Files right-clicked, showing the New subfolder option.">
+                            <figcaption>Right-click <strong>Files</strong> → <strong>New subfolder</strong>, name it
+                                <strong>raw</strong>.
+                            </figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/upload_raw_files.png"
+                                alt="The raw subfolder right-clicked, with Upload expanded to show Upload files.">
+                            <figcaption>Right-click <strong>raw</strong> → <strong>Upload</strong> →
+                                <strong>Upload files</strong> and select the three files.
+                            </figcaption>
+                        </figure>
                         <div class="callout pro"><span class="k">For data pros</span>Bronze keeps the source format
                             untouched — it's your immutable source of truth, like an append-only staging table you never
                             edit by hand.</div>
@@ -1362,11 +1487,35 @@ cust = (spark.read.option("header", "true").option("inferSchema", "true")
 cust.write.mode("overwrite").format("delta").saveAsTable("bronze.customers")
 
 display(spark.table("bronze.sales"))</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>Each source follows the
+                            same read → write pattern:
+                            <ul>
+                                <li><code>spark.read</code> loads a file into a <strong>DataFrame</strong> (an
+                                    in-memory, distributed table). <code>.json(...)</code> / <code>.csv(...)</code> pick
+                                    the parser for the file format.</li>
+                                <li><code>.option("multiline", "true")</code> tells the JSON reader each record can span
+                                    several lines (the orders aren't one-object-per-line).</li>
+                                <li><code>.option("header", "true")</code> uses the CSV's first row as column names;
+                                    <code>.option("inferSchema", "true")</code> samples the data to guess each column's
+                                    type (int, string, date…) instead of treating everything as text.
+                                </li>
+                                <li><code>.write.format("delta").saveAsTable("bronze.<em>name</em>")</code> saves the
+                                    DataFrame as a managed <strong>Delta</strong> table in the <code>bronze</code>
+                                    schema
+                                    — this is what makes it queryable in SQL and versioned (time travel).</li>
+                                <li><code>.mode("overwrite")</code> replaces the table if it already exists, so
+                                    re-running
+                                    the cell is safe and idempotent.</li>
+                                <li><code>display(spark.table("bronze.sales"))</code> reads the table back and renders
+                                    it
+                                    as an interactive grid so you can eyeball the result.</li>
+                            </ul>
+                        </div>
                         <div class="callout note"><span class="k">Alternative: shortcuts</span>If the source already
                             lived in OneLake, ADLS Gen2, S3, or Google, you'd create a <strong>shortcut</strong> in
                             bronze instead of copying — zero-copy, always live.</div>
                         <div class="callout verify"><span class="k">Expected result</span>Three tables appear under
-                            <code>Tables/bronze</code>: <code>sales</code> (20 rows), <code>inventory</code> (7),
+                            <code>Tables/bronze</code>: <code>sales</code> (20 rows), <code>inventory</code> (8),
                             <code>customers</code> (8).
                         </div>
                     </div>
@@ -1451,6 +1600,10 @@ display(spark.table("bronze.sales"))</code></pre>
                             four different currencies, and test transactions. Run:</p>
                         <pre class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
 
+# Return null (instead of throwing) when a date string doesn't match a format,
+# so coalesce below can fall through and try the next pattern.
+spark.conf.set("spark.sql.legacy.timeParserPolicy", "CORRECTED")
+
 # Illustrative FX rates to USD (teaching values, not live rates)
 fx = {"USD": 1.0, "CAD": 0.73, "EUR": 1.09, "GBP": 1.27}
 fx_map = F.create_map([F.lit(x) for kv in fx.items() for x in kv])
@@ -1472,6 +1625,37 @@ silver_sales = (bronze_sales
 
 silver_sales.write.mode("overwrite").format("delta").saveAsTable("silver.sales")
 display(silver_sales.orderBy("order_date"))</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            takes the messy bronze orders and makes one clean sales table. Step by step:
+                            <ul>
+                                <li><strong>Line 1 (the config):</strong> tells Spark "if a date doesn't match a
+                                    format, just skip it — don't crash." This is what prevents the error below.</li>
+                                <li><strong>The FX map:</strong> a tiny price list of exchange rates
+                                    (USD, CAD, EUR, GBP) used to turn every amount into US dollars.</li>
+                                <li><strong>Read bronze:</strong> load the raw <code>bronze.sales</code> table.</li>
+                                <li><strong>Drop test orders:</strong> remove rows marked as test/QA.</li>
+                                <li><strong>Fix the customer key:</strong> trim spaces and make it upper-case so
+                                    <code>c-0012</code> and <code>C-0012</code> count as the same customer.
+                                </li>
+                                <li><strong>Fix the dates:</strong> the orders use several date styles; it tries each
+                                    one and keeps the first that works, so you end up with one proper date.</li>
+                                <li><strong>Convert to USD:</strong> multiply the amount by its exchange rate and round
+                                    to cents.</li>
+                                <li><strong>Pick the columns:</strong> keep just the columns you want, in order.</li>
+                                <li><strong>Save it:</strong> write the result as the <code>silver.sales</code> table
+                                    (re-running is safe — it overwrites), then show it sorted by date.</li>
+                            </ul>
+                        </div>
+                        <div class="callout note"><span class="k">Got a <code>Py4JJavaError</code> /
+                                <code>TASK_WRITE_FAILED</code>?</span>
+                            The error points at <code>saveAsTable</code>, but the real problem is usually the
+                            <strong>dates</strong>. By default Spark <em>crashes</em> the moment a date doesn't match a
+                            format (e.g. <code>01/04/2026</code> isn't <code>yyyy-MM-dd</code>). The first line,
+                            <code>spark.conf.set("spark.sql.legacy.timeParserPolicy", "CORRECTED")</code>, tells it to
+                            skip and try the next format instead. Make sure that line is at the top of the cell, then
+                            re-run. (To see the true cause in any Spark error, scroll down to the
+                            <code>Caused by:</code> line.)
+                        </div>
                         <div class="callout pro"><span class="k">For data pros</span>This is your ELT transform layer —
                             like a cleansing view or stored proc, but the output is a governed Delta table every engine
                             can read.</div>
@@ -1506,6 +1690,25 @@ silver_customers = (crm
 
 silver_customers.write.mode("overwrite").format("delta").saveAsTable("silver.customers")
 display(silver_customers)</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms:
+                            it cleans the customer list so each person shows up only once.
+                            <ul>
+                                <li><strong>Read the list:</strong> load the raw customers from bronze.</li>
+                                <li><strong>Tidy the key:</strong> trim spaces and upper-case <code>web_ref</code> so it
+                                    matches the key used in the sales table.</li>
+                                <li><strong>Standardize country:</strong> fold <code>US</code> /
+                                    <code>United States</code>
+                                    into one label (and <code>UK</code> / <code>United Kingdom</code> into one), so the
+                                    same country isn't counted two ways.
+                                </li>
+                                <li><strong>Remove duplicates:</strong> keep just one row per customer.</li>
+                                <li><strong>Pick &amp; rename columns:</strong> <code>web_ref</code> becomes
+                                    <code>customer_ref</code> — the same name the sales table uses, ready to join.
+                                </li>
+                                <li><strong>Save it:</strong> write the result as <code>silver.customers</code>
+                                    (re-running is safe — it overwrites).</li>
+                            </ul>
+                        </div>
                         <div class="callout verify"><span class="k">Expected result</span><code>silver.customers</code>
                             collapses to <strong>6 unique customers</strong> (the duplicate <code>C-0007</code> and
                             <code>C-0044</code> rows merged), each with a standardized country.
@@ -1616,6 +1819,21 @@ GROUP BY CAST(order_date AS date)
 ORDER BY order_date;</code></pre>
                             </div>
                         </div>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            rolls the clean sales up to one row per day.
+                            <ul>
+                                <li><strong>Start from <code>silver.sales</code></strong> (the cleaned orders).</li>
+                                <li><strong>Group by day:</strong> put all orders from the same date into one bucket.
+                                </li>
+                                <li><strong>Add up each day:</strong> total revenue (rounded to cents), total units
+                                    sold,
+                                    and the number of distinct orders.</li>
+                                <li><strong>Sort &amp; save:</strong> order by date and write it as
+                                    <code>gold.daily_sales</code>.
+                                </li>
+                            </ul>
+                            The <strong>T-SQL</strong> tab does the exact same thing as a read-only preview.
+                        </div>
                         <div class="callout note"><span class="k">Note</span>The lakehouse <strong>SQL analytics
                                 endpoint is read-only</strong> — great for validating with T-SQL, but to
                             <em>persist</em> gold tables in T-SQL you'd use a Fabric <strong>Warehouse</strong> as the
@@ -1647,6 +1865,23 @@ clv = (spark.table("silver.sales")
 clv = clv.join(spark.table("silver.customers"), "customer_ref", "left")
 clv.write.mode("overwrite").format("delta").saveAsTable("gold.customer_ltv")
 display(clv.orderBy(F.desc("lifetime_value_usd")))</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            adds up each customer's whole history, then attaches their details.
+                            <ul>
+                                <li><strong>Group by customer:</strong> from <code>silver.sales</code>, gather every
+                                    order
+                                    per customer.</li>
+                                <li><strong>Summarize:</strong> total lifetime spend (USD), how many orders they placed,
+                                    and the date of their most recent order.</li>
+                                <li><strong>Join details:</strong> pull in name / country / segment from
+                                    <code>silver.customers</code> (a <em>left</em> join keeps every customer, even if
+                                    some
+                                    detail is missing).
+                                </li>
+                                <li><strong>Save it:</strong> write <code>gold.customer_ltv</code> and show the biggest
+                                    spenders first.</li>
+                            </ul>
+                        </div>
                         <div class="callout verify"><span class="k">Expected result</span><code>gold.customer_ltv</code>
                             ranks customers by USD lifetime value, joined to their name/country/segment.</div>
                     </div>
@@ -1664,13 +1899,29 @@ display(clv.orderBy(F.desc("lifetime_value_usd")))</code></pre>
 status = (spark.table("bronze.inventory")
     .withColumn("needs_reorder", F.col("on_hand_qty") < F.col("reorder_point"))
     .select("sku", "product_name", "category", "on_hand_qty",
-            "reorder_point", "needs_reorder"))
+            "reorder_point", "unit_cost_usd", "needs_reorder"))
 
 status.write.mode("overwrite").format("delta").saveAsTable("gold.inventory_status")
 display(status.filter("needs_reorder = true"))</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            flags which products need reordering.
+                            <ul>
+                                <li><strong>Start from <code>bronze.inventory</code></strong> (current stock levels).
+                                </li>
+                                <li><strong>Add a flag:</strong> a true/false <code>needs_reorder</code> column that's
+                                    <em>true</em> when stock on hand is below the reorder point.
+                                </li>
+                                <li><strong>Keep the useful columns</strong> — including <code>unit_cost_usd</code>,
+                                    which you'll hide from analysts with column security in Module 6 — and save as
+                                    <code>gold.inventory_status</code>; the display shows only the items that need
+                                    reordering right now.
+                                </li>
+                            </ul>
+                        </div>
                         <div class="callout verify"><span class="k">Expected
                                 result</span><code>gold.inventory_status</code> flags each SKU; the filtered view shows
-                            items at/under their reorder point.</div>
+                            the one item under its reorder point — <strong>Ethiopia Yirgacheffe</strong>
+                            (12 on hand vs a reorder point of 80), the stock-out from the story.</div>
                     </div>
                 </details>
             </section>
@@ -1744,13 +1995,44 @@ display(status.filter("needs_reorder = true"))</code></pre>
                             with no extra copy to build or refresh.</div>
                         <ol>
                             <li>Open <code>lh_contosomart</code> and switch to the <strong>SQL analytics
-                                    endpoint</strong> (top-right dropdown).</li>
+                                    endpoint</strong> — top-right <strong>Analyze data with</strong> (or the item
+                                dropdown) → <strong>SQL analytics endpoint</strong>.</li>
+                            <li><strong>Refresh the schema</strong> so the <code>gold</code> schema shows up: in the
+                                Explorer select the <strong>⋯</strong> (or right-click) → <strong>Refresh</strong>. You
+                                should then see <code>bronze</code>, <code>silver</code> and <code>gold</code> under
+                                <strong>Schemas</strong>.
+                            </li>
                             <li>Select <strong>New semantic model</strong>.</li>
-                            <li>Name it <strong>ContosoMart Gold</strong> and select the <code>gold</code> tables:
+                            <li>Name it <strong>ContosoMart Gold</strong>, keep <strong>Storage mode = Direct Lake on
+                                    SQL</strong>, and select the <code>gold</code> tables:
                                 <code>daily_sales</code>, <code>customer_ltv</code>, <code>inventory_status</code>.
+                                (If <code>gold</code> is empty in the picker, hit the <strong>↻ refresh</strong> icon
+                                next to the search box.)
                             </li>
                             <li>Select <strong>Confirm</strong>.</li>
                         </ol>
+                        <figure class="shot">
+                            <img src="../../images/sql_analytic_endpoint.png"
+                                alt="The Analyze data with dropdown open on the lakehouse, showing the SQL analytics endpoint option.">
+                            <figcaption>Switch to the <strong>SQL analytics endpoint</strong> from
+                                <strong>Analyze data with</strong> (top-right).
+                            </figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/schema.png"
+                                alt="SQL analytics endpoint Explorer showing bronze, gold and silver under Schemas after a refresh.">
+                            <figcaption>After <strong>Refresh</strong>, the <code>gold</code> schema appears alongside
+                                <code>bronze</code> and <code>silver</code>.
+                            </figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/semantic_model.png"
+                                alt="New semantic model dialog named ContosoMart Gold, Direct Lake on SQL storage mode, with the three gold tables checked.">
+                            <figcaption><strong>New semantic model</strong> — name it, keep
+                                <strong>Direct Lake on SQL</strong>, check the three <code>gold</code> tables, and
+                                <strong>Confirm</strong>.
+                            </figcaption>
+                        </figure>
                         <div class="callout pro"><span class="k">For data pros</span>Direct Lake reads the Delta files
                             in OneLake directly into the VertiPaq engine — Import-mode speed with no scheduled refresh
                             copy. The curated <strong>gold layer is the ideal Direct Lake source</strong>.</div>
@@ -1778,6 +2060,19 @@ display(status.filter("needs_reorder = true"))</code></pre>
                             </li>
                             <li><strong>Save</strong> the report as <strong>ContosoMart Overview</strong>.</li>
                         </ol>
+                        <figure class="shot">
+                            <img src="../../images/autocreatereport.png"
+                                alt="The ContosoMart Gold semantic model's context menu in the workspace with Auto-create report highlighted.">
+                            <figcaption>On <strong>ContosoMart Gold</strong> → <strong>⋯</strong> →
+                                <strong>Auto-create report</strong> for a fast start.
+                            </figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/report_generated.png"
+                                alt="Auto-generated Power BI Quick summary report over ContosoMart Gold with revenue trend, orders and value-by-country charts.">
+                            <figcaption>The generated report reads live from gold — revenue trend, orders, and value by
+                                country.</figcaption>
+                        </figure>
                         <div class="callout verify"><span class="k">Expected result</span>An interactive report showing
                             the daily revenue trend, top customers, and reorder alerts — reading live from gold.</div>
                     </div>
@@ -1859,21 +2154,120 @@ display(status.filter("needs_reorder = true"))</code></pre>
                         <div class="why"><span class="k">Why</span>Analysts need the data but not the costs — one role
                             scopes columns and rows across every engine at once.</div>
                         <p>Give analysts read access to inventory <em>without</em> the <code>unit_cost_usd</code> column
-                            and only for their region:</p>
+                            and only for the coffee <strong>Beans</strong> they manage.</p>
+                        <div class="callout note"><span class="k">Don't see <code>unit_cost_usd</code> in the
+                                schema?</span>
+                            Column security can only hide a column that actually exists in the table \u2014 and your
+                            gold
+                            table was built earlier <em>without</em> cost. Fix it in two quick steps:
+                            <ol>
+                                <li>Run this cell in your notebook to rebuild <code>gold.inventory_status</code>
+                                    <strong>with</strong> the cost column:
+                                    <pre
+                                        class="code"><button class="copy">Copy</button><code>from pyspark.sql import functions as F
+status = (spark.table("bronze.inventory")
+    .withColumn("needs_reorder", F.col("on_hand_qty") < F.col("reorder_point"))
+    .select("sku", "product_name", "category", "on_hand_qty",
+            "reorder_point", "unit_cost_usd", "needs_reorder"))
+status.write.mode("overwrite").option("overwriteSchema", "true").format("delta").saveAsTable("gold.inventory_status")</code></pre>
+                                </li>
+                                <li>Now <strong>refresh the schema</strong> so the new column shows up: in the
+                                    <strong>SQL analytics endpoint</strong> Explorer, select the <strong>\u22ef</strong>
+                                    (or right-click the table) \u2192 <strong>Refresh</strong>. Until you refresh, the
+                                    endpoint keeps showing the old column list \u2014 that's why
+                                    <code>unit_cost_usd</code> is missing in your screenshot.
+                                </li>
+                            </ol>
+                            <code>.option("overwriteSchema", "true")</code> lets the overwrite add the new column to an
+                            existing table.
+                        </div>
                         <ol>
-                            <li>Open <code>lh_contosomart</code> → <strong>Manage OneLake security</strong> (or
-                                <strong>Manage roles</strong>).
+                            <li>Open <code>lh_contosomart</code> → <strong>Security</strong> → <strong>Manage OneLake
+                                    security</strong> (or <strong>Manage roles</strong>), then select
+                                <strong>+ New</strong>.
                             </li>
-                            <li>Create a role <strong>AnalystRead</strong> and grant it on
-                                <code>gold.inventory_status</code> and <code>gold.daily_sales</code>.
+                            <li><strong>Role step:</strong> name it <strong>AnalystRead</strong>, keep the type
+                                <strong>Grant</strong> with <strong>Read</strong>, and select <strong>Next</strong>.
                             </li>
-                            <li>Apply <strong>column-level security</strong> to exclude a sensitive column (e.g. cost),
-                                and add a
-                                <strong>row-level</strong> filter (e.g. <code>category = 'Beans'</code>) to scope the
-                                rows.
+                            <li><strong>Data step:</strong> choose <strong>Selected data</strong> (or pick
+                                <strong>All data</strong> then <strong>Edit</strong>) so you can scope exactly what the
+                                role sees, then open the data picker.
                             </li>
-                            <li>Add a test <strong>Viewer</strong> user to the role.</li>
+                            <li>In <strong>Edit data for the role</strong>, expand <strong>Tables → gold</strong> and
+                                check <code>inventory_status</code> and <code>daily_sales</code>. To add column/row
+                                rules, open <code>inventory_status</code> and use its <strong>Data access</strong> tab:
+                                <ul>
+                                    <li><strong>Column security</strong> → find <code>unit_cost_usd</code> and
+                                        <em>remove its Read permission</em> (uncheck it) so the cost column is hidden.
+                                        Leave the other columns on <strong>Read</strong>.
+                                    </li>
+                                    <li><strong>Row security</strong> — this one is a typed filter, not checkboxes:
+                                        <ol>
+                                            <li>Still on <code>inventory_status</code>'s <strong>Data access</strong>
+                                                tab, click the <strong>Row security</strong> sub-tab (next to Column
+                                                security).</li>
+                                            <li>Under <em>"Show data to members of your role if the following rules
+                                                    apply"</em>, click into the rule box and type exactly:
+                                                <pre
+                                                    class="code"><button class="copy">Copy</button><code>category = 'Beans'</code></pre>
+                                                Use <strong>single quotes</strong> around <code>Beans</code> and match
+                                                the value's capitalization.
+                                            </li>
+                                            <li>That's the whole rule — the role will now only return rows where
+                                                <code>category</code> is <code>Beans</code>. (Accessories and Equipment
+                                                rows are filtered out.)
+                                            </li>
+                                        </ol>
+                                    </li>
+                                </ul>
+                                Select <strong>Add data</strong>.
+                            </li>
+                            <li><strong>Member step:</strong> add a test <strong>Viewer</strong> user to the role, then
+                                <strong>Save</strong>.
+                            </li>
                         </ol>
+                        <div class="callout note"><span class="k">Column vs row security — which is which?</span>
+                            This is the part that trips people up:
+                            <ul>
+                                <li><strong>Column security</strong> controls <em>which columns</em> a role can see.
+                                    Hiding <code>unit_cost_usd</code> means analysts still get every inventory row —
+                                    just
+                                    without the cost figure in that column.</li>
+                                <li><strong>Row security</strong> controls <em>which rows</em> a role can see, using a
+                                    WHERE-style filter. <code>category = 'Beans'</code> means the role only ever sees
+                                    Beans SKUs — Accessories and Equipment rows disappear for them.</li>
+                            </ul>
+                            You can set either one alone, or both together on the same table. If the cost column isn't
+                            in the Column security list, rebuild the table with the cell above and
+                            <strong>Refresh</strong> the SQL analytics endpoint.
+                        </div>
+                        <figure class="shot">
+                            <img src="../../images/new_role.png"
+                                alt="OneLake security dialog, All Lakehouse roles tab, with the + New button to create a role.">
+                            <figcaption><strong>Manage OneLake security</strong> → <strong>+ New</strong> to create a
+                                role.</figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/rolename.png"
+                                alt="New role Role step: name AnalystRead, type Grant, Read permission selected.">
+                            <figcaption><strong>Role</strong> step — name <strong>AnalystRead</strong>, keep
+                                <strong>Grant / Read</strong>.
+                            </figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/edittable.png"
+                                alt="New role Data step showing All data vs Selected data and a Data preview with an Edit button.">
+                            <figcaption><strong>Data</strong> step — use <strong>Edit</strong> to scope the role to
+                                specific tables.</figcaption>
+                        </figure>
+                        <figure class="shot">
+                            <img src="../../images/select_table.png"
+                                alt="Edit data for the role: the gold schema expanded with inventory_status and daily_sales checked.">
+                            <figcaption>Check the <code>gold</code> tables, then open a table's
+                                <strong>Data access</strong> to set <strong>Column</strong> / <strong>Row</strong>
+                                security before <strong>Add data</strong>.
+                            </figcaption>
+                        </figure>
                         <div class="callout pro"><span class="k">For data pros</span>OneLake security roles enforce
                             table/column/row rules <em>once</em> and apply them across SQL, Spark, and Power BI — no
                             need to re-implement RLS per tool. Workspace Admins/Members/Contributors already have full
@@ -1895,6 +2289,16 @@ spark.conf.set("spark.sql.parquet.vorder.enabled", "true")
 
 # Compact small files and apply V-Order to the gold fact table
 spark.sql("OPTIMIZE gold.daily_sales")</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            tidies the table's files so reads stay fast.
+                            <ul>
+                                <li><strong>Turn on V-Order:</strong> a file layout that makes Power BI, SQL and Spark
+                                    read the data faster.</li>
+                                <li><strong>OPTIMIZE:</strong> merges lots of small files into a few bigger ones for
+                                    <code>gold.daily_sales</code> — fewer files means quicker queries.
+                                </li>
+                            </ul>
+                        </div>
                         <div class="callout note"><span class="k">Note</span>Fabric writes Delta with V-Order by
                             default. Target file sizes of <strong>128 MB–1 GB</strong> in gold, and use <strong>Liquid
                                 Clustering</strong> (not partitioning) for silver/gold on new implementations.</div>
@@ -1912,6 +2316,11 @@ spark.sql("OPTIMIZE gold.daily_sales")</code></pre>
                             keeping enough history for safe time travel.</div>
                         <pre class="code"><button class="copy">Copy</button><code># Remove old data files no longer referenced (7-day minimum retention)
 spark.sql("VACUUM gold.daily_sales RETAIN 168 HOURS")</code></pre>
+                        <div class="callout note"><span class="k">What the Spark code does</span>In plain terms: it
+                            deletes old, unused data files to reclaim storage. <code>VACUUM</code> removes files the
+                            table no longer points to, but keeps the last <strong>7 days (168 hours)</strong> so you can
+                            still “time travel” back to recent versions if needed.
+                        </div>
                         <div class="callout note"><span class="k">Note</span>Delta keeps history for <strong>time
                                 travel</strong>; VACUUM trims files older than the retention window. By default you
                             can't vacuum below <strong>7 days (168 hours)</strong>, which protects consistency.</div>
@@ -1951,7 +2360,7 @@ spark.sql("VACUUM gold.daily_sales RETAIN 168 HOURS")</code></pre>
         const navList = document.getElementById("navList");
         modules.forEach((m, i) => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="#${m.id}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
+            li.innerHTML = `<a href="#${m.id}" data-label="${m.dataset.title}"><span class="num">${i}</span><span class="lbl">${m.dataset.title}</span></a>`;
             navList.appendChild(li);
         });
 
@@ -1993,10 +2402,15 @@ spark.sql("VACUUM gold.daily_sales RETAIN 168 HOURS")</code></pre>
         document.querySelectorAll("pre.code .copy").forEach(btn => {
             btn.addEventListener("click", () => {
                 const code = btn.parentElement.querySelector("code").innerText;
-                navigator.clipboard.writeText(code).then(() => {
-                    const t = btn.textContent; btn.textContent = "Copied!";
-                    setTimeout(() => (btn.textContent = t), 1200);
+                const flash = () => { const t = btn.textContent; btn.textContent = "Copied!"; setTimeout(() => (btn.textContent = t), 1200); };
+                const fallback = () => new Promise((res, rej) => {
+                    const ta = document.createElement("textarea");
+                    ta.value = code; ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+                    document.body.appendChild(ta); ta.focus(); ta.select();
+                    try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { document.body.removeChild(ta); }
                 });
+                const op = (navigator.clipboard && window.isSecureContext) ? navigator.clipboard.writeText(code) : fallback();
+                op.then(flash).catch(() => fallback().then(flash).catch(() => { const t = btn.textContent; btn.textContent = "Press Ctrl+C"; setTimeout(() => (btn.textContent = t), 1500); }));
             });
         });
 

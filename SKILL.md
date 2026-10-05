@@ -22,6 +22,11 @@ rules, and the canonical source list. This skill is the *how-to*; `AUTHORING.md`
 The user wants a new hands-on Fabric lab (any scenario), another workshop alongside
 `workshops/ecommerce-medallion/`, or to convert a deck section into an interactive lab.
 
+> **Related:** to *update* the saga against the latest Microsoft docs — scan Fabric/Foundry/
+> Defender for new capabilities, propose new acts, and rebuild the decks — use the
+> [`fabric-workshop-updater`](skills/fabric-workshop-updater/SKILL.md) skill, which calls this
+> one to author each approved module.
+
 ## Inputs to confirm with the user
 1. **Scenario** — the real-world use case (e-commerce, IoT/real-time, finance, etc.).
 2. **Depth** — real hands-on (Fabric trial) vs illustrated walkthrough. Default: hands-on.
